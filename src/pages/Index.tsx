@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, Sparkles } from 'lucide-react';
+import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import ContentCarousel from '@/components/content/ContentCarousel';
@@ -91,33 +91,40 @@ const Index = () => {
       <Navbar />
       
       <main className="container px-4 pt-24 pb-16 mx-auto">
-        {/* Hero Section */}
-        <section className="mb-12 animate-fade-in">
-          <div className="text-center max-w-3xl mx-auto mb-10">
-            <div className="rounded-full bg-primary/5 text-primary w-fit mx-auto px-4 py-1 text-sm font-medium mb-4">
-              KI-gestützter Content Generator
+        {/* Hero Section - modernisiert */}
+        <section className="mb-16 animate-fade-in">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="gradient-border inline-block rounded-full bg-primary/5 text-primary px-4 py-1.5 text-sm font-medium mb-5">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4" />
+                KI-gestützter Content Generator
+              </span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
-              Willkommen zum KI-gestützten Blog-Autor
+            
+            <h1 className="text-3xl md:text-4xl font-bold mb-5 text-balance relative">
+              <span className="text-gradient">Willkommen zum KI-gestützten Blog-Autor</span>
+              <div className="absolute -top-6 -right-12 w-16 h-16 bg-primary/5 rounded-full blur-2xl -z-10"></div>
+              <div className="absolute -bottom-4 -left-8 w-20 h-20 bg-secondary/5 rounded-full blur-3xl -z-10"></div>
             </h1>
-            <p className="text-muted-foreground text-lg mb-8">
-              Erstellen Sie hochwertige Inhalte mit KI-Unterstützung
+            
+            <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto">
+              Erstellen Sie hochwertige Inhalte mit KI-Unterstützung und optimieren Sie Ihren Content-Workflow
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 size="lg" 
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto button-glow bg-gradient-to-r from-primary to-primary/90"
                 onClick={() => navigate('/create/blog')}
               >
-                <FileText className="mr-2 h-5 w-5" />
+                <BookOpen className="mr-2 h-5 w-5" />
                 Blog-Artikel erstellen
               </Button>
               
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto border-2"
                 onClick={() => navigate('/create/linkedin')}
               >
                 <FileText className="mr-2 h-5 w-5" />
@@ -126,7 +133,7 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Content Section */}
+          {/* Content Section - verbessert */}
           <div className="w-full mb-12 animate-slide-in">
             <ContentCarousel 
               title="Aktuelle Inhalte" 
@@ -141,24 +148,68 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Quick Access Feature */}
-        <section className="rounded-xl border border-border bg-card p-6 md:p-8 max-w-2xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
-            <div className="bg-secondary/10 rounded-full p-4">
+        {/* Feature Cards - Neu hinzugefügt */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
+            <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
+              <Sparkles className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3">Stilanalyse</h3>
+            <p className="text-muted-foreground mb-5">
+              Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen und konsistent zu bleiben.
+            </p>
+            <Button 
+              variant="ghost" 
+              className="text-primary flex items-center gap-2"
+              onClick={() => navigate('/analysis')}
+            >
+              Zu Stilanalyse
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
+            <div className="mb-4 bg-secondary/10 w-12 h-12 flex items-center justify-center rounded-full">
+              <Lightbulb className="h-6 w-6 text-secondary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3">Quellen verwalten</h3>
+            <p className="text-muted-foreground mb-5">
+              Fügen Sie Quellen und Dokumente hinzu, um qualitativ hochwertige und gut recherchierte Inhalte zu erstellen.
+            </p>
+            <Button 
+              variant="ghost" 
+              className="text-secondary flex items-center gap-2"
+              onClick={() => navigate('/resources/sources')}
+            >
+              Zu Quellen
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+
+        {/* Quick Access Feature - überarbeitet */}
+        <section className="glassmorphism-enhanced rounded-xl p-6 md:p-8 max-w-2xl mx-auto overflow-hidden relative">
+          <div className="absolute -bottom-12 -right-12 w-36 h-36 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+          <div className="absolute -top-8 -left-8 w-28 h-28 bg-secondary/5 rounded-full blur-2xl -z-10"></div>
+          
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 z-10 relative">
+            <div className="bg-secondary/10 rounded-full p-4 animate-pulse-subtle">
               <Sparkles className="h-8 w-8 text-secondary" />
             </div>
             
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-xl font-semibold mb-2">Probieren Sie die Stilanalyse</h3>
-              <p className="text-muted-foreground mb-4">
-                Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen.
+              <p className="text-muted-foreground mb-5">
+                Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen und den perfekten Ton für Ihre Zielgruppe zu treffen.
               </p>
               
               <Button 
                 variant="outline"
                 onClick={() => navigate('/analysis')}
+                className="border-2"
               >
                 Zu Stilanalyse
+                <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
