@@ -1,6 +1,3 @@
-
-// Since EditBlog.tsx is a large file, I'll focus on updating the relevant parts
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Save, MessageSquare } from 'lucide-react';
@@ -68,15 +65,12 @@ const EditBlog = () => {
   const workflowSteps = contentType === 'blog' ? blogWorkflowSteps : linkedinWorkflowSteps;
 
   useEffect(() => {
-    // In a real app, fetch data based on ID and type
     console.log(`Fetching ${contentType} data for ID: ${id}`);
-    // setBlog(...) would happen here after fetching
   }, [id, contentType]);
 
   const handleSave = () => {
     setIsSaving(true);
     
-    // Simulate API call
     setTimeout(() => {
       setBlog(prev => ({
         ...prev,
@@ -95,14 +89,12 @@ const EditBlog = () => {
     
     setIsSubmittingFeedback(true);
     
-    // Simulate API call
     setTimeout(() => {
       toast.success("Feedback gesendet");
       setActiveTab('editor');
       setFeedback('');
       setIsSubmittingFeedback(false);
       
-      // Update blog state to reflect feedback submitted
       setBlog(prev => ({
         ...prev,
         needsFeedback: false,
