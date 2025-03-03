@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -9,7 +8,8 @@ import {
   Grid2X2, 
   List as ListIcon,
   FileText,
-  Sparkles
+  Sparkles,
+  MessageSquare
 } from 'lucide-react';
 import { 
   Select, 
@@ -23,58 +23,7 @@ import { Input } from '@/components/ui/input';
 import Navbar from '@/components/layout/Navbar';
 import ContentCard, { ContentCardProps } from '@/components/content/ContentCard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Mock content data
-const mockContents: ContentCardProps[] = [
-  {
-    id: '1',
-    title: 'Die Zukunft der KI im digitalen Marketing',
-    type: 'blog',
-    status: 'inprogress',
-    progress: 45,
-    lastUpdated: 'Vor 2 Stunden'
-  },
-  {
-    id: '2',
-    title: 'Warum Innovation der Schlüssel zum Erfolg ist',
-    type: 'linkedin',
-    status: 'feedback',
-    progress: 75,
-    lastUpdated: 'Gestern'
-  },
-  {
-    id: '3',
-    title: 'Beste Praktiken für Remote-Teams im Jahr 2023',
-    type: 'blog',
-    status: 'completed',
-    progress: 100,
-    lastUpdated: 'Vor 3 Tagen'
-  },
-  {
-    id: '4',
-    title: 'Die 5 wichtigsten Trends in der digitalen Transformation',
-    type: 'blog',
-    status: 'inprogress',
-    progress: 30,
-    lastUpdated: 'Vor 1 Tag'
-  },
-  {
-    id: '5',
-    title: '10 Tipps für erfolgreiches Content Marketing',
-    type: 'blog',
-    status: 'completed',
-    progress: 100,
-    lastUpdated: 'Vor 1 Woche'
-  },
-  {
-    id: '6',
-    title: 'Die Macht der Datenanalyse für Geschäftsentscheidungen',
-    type: 'linkedin',
-    status: 'inprogress',
-    progress: 15,
-    lastUpdated: 'Vor 4 Stunden'
-  }
-];
+import { Progress } from '@/components/ui/progress';
 
 type ContentType = 'all' | 'blog' | 'linkedin';
 type ContentStatus = 'all' | 'inprogress' | 'feedback' | 'completed';
@@ -88,7 +37,57 @@ const ContentList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('contents');
 
-  // Filter content based on selected filters and search term
+  const mockContents: ContentCardProps[] = [
+    {
+      id: '1',
+      title: 'Die Zukunft der KI im digitalen Marketing',
+      type: 'blog',
+      status: 'inprogress',
+      progress: 45,
+      lastUpdated: 'Vor 2 Stunden'
+    },
+    {
+      id: '2',
+      title: 'Warum Innovation der Schlüssel zum Erfolg ist',
+      type: 'linkedin',
+      status: 'feedback',
+      progress: 75,
+      lastUpdated: 'Gestern'
+    },
+    {
+      id: '3',
+      title: 'Beste Praktiken für Remote-Teams im Jahr 2023',
+      type: 'blog',
+      status: 'completed',
+      progress: 100,
+      lastUpdated: 'Vor 3 Tagen'
+    },
+    {
+      id: '4',
+      title: 'Die 5 wichtigsten Trends in der digitalen Transformation',
+      type: 'blog',
+      status: 'inprogress',
+      progress: 30,
+      lastUpdated: 'Vor 1 Tag'
+    },
+    {
+      id: '5',
+      title: '10 Tipps für erfolgreiches Content Marketing',
+      type: 'blog',
+      status: 'completed',
+      progress: 100,
+      lastUpdated: 'Vor 1 Woche'
+    },
+    {
+      id: '6',
+      title: 'Die Macht der Datenanalyse für Geschäftsentscheidungen',
+      type: 'linkedin',
+      status: 'inprogress',
+      progress: 15,
+      lastUpdated: 'Vor 4 Stunden'
+    }
+  ];
+
   const filteredContents = mockContents.filter(content => {
     const matchesType = typeFilter === 'all' || content.type === typeFilter;
     const matchesStatus = statusFilter === 'all' || content.status === statusFilter;
@@ -97,11 +96,16 @@ const ContentList = () => {
     return matchesType && matchesStatus && matchesSearch;
   });
 
-  // Statistics for dashboard
   const stats = {
     active: mockContents.filter(c => c.status !== 'completed').length,
     completed: mockContents.filter(c => c.status === 'completed').length,
     avgTime: '2.5 Tage'
+  };
+
+  const getWorkflowSteps = (type: 'blog' | 'linkedin') => {
+    return type === 'blog' 
+      ? ['Stilanalyse', 'Recherche', 'Planung', 'Schreiben', 'Faktenprüfung', 'Bearbeitung', 'SEO', 'Social'] 
+      : ['Stilanalyse', 'Planung', 'Schreiben', 'Bearbeitung', 'Veröffentlichung'];
   };
 
   return (
@@ -126,32 +130,26 @@ const ContentList = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              asChild 
+              onClick={() => navigate('/analysis')}
               className="hidden md:flex"
             >
-              <a href="/analysis">
-                <Sparkles className="h-4 w-4 mr-2" />
-                Stilanalyse
-              </a>
+              <Sparkles className="h-4 w-4 mr-2" />
+              Stilanalyse
             </Button>
             
             <Button 
               variant="outline" 
-              asChild
+              onClick={() => navigate('/create/linkedin')}
             >
-              <a href="/create/linkedin">
-                <Plus className="h-4 w-4 mr-1" />
-                LinkedIn-Post
-              </a>
+              <Plus className="h-4 w-4 mr-1" />
+              LinkedIn-Post
             </Button>
             
             <Button 
-              asChild
+              onClick={() => navigate('/create/blog')}
             >
-              <a href="/create/blog">
-                <Plus className="h-4 w-4 mr-1" />
-                Blog-Artikel
-              </a>
+              <Plus className="h-4 w-4 mr-1" />
+              Blog-Artikel
             </Button>
           </div>
         </div>
@@ -188,7 +186,7 @@ const ContentList = () => {
               <div className="flex-1 md:flex-none">
                 <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as ContentType)}>
                   <SelectTrigger className="h-9 w-full md:w-[180px]">
-                    <Filter className="h-4 w-4 mr-2" />
+                    <FileText className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Typ filtern" />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,28 +248,45 @@ const ContentList = () => {
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-medium text-sm truncate">{content.title}</h3>
                         <span 
-                          className={`text-xs px-2 py-0.5 rounded-full 
+                          className={`text-xs px-2 py-0.5 rounded-full flex items-center
                             ${content.status === 'inprogress' ? 'bg-status-inprogress/10 text-status-inprogress' : 
                             content.status === 'feedback' ? 'bg-status-feedback/10 text-status-feedback' : 
                             'bg-status-completed/10 text-status-completed'}`}
                         >
+                          {content.status === 'feedback' && <MessageSquare className="h-3 w-3 mr-1" />}
                           {content.status === 'inprogress' ? 'In Arbeit' : 
                            content.status === 'feedback' ? 'Feedback benötigt' : 
                            'Abgeschlossen'}
                         </span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-muted-foreground mb-2">
                         {content.lastUpdated} • {content.type === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'}
+                      </div>
+                      
+                      <div className="w-full">
+                        <Progress 
+                          value={content.progress} 
+                          className={`h-1.5 
+                            ${content.status === 'inprogress' ? 'text-status-inprogress' : 
+                             content.status === 'feedback' ? 'text-status-feedback' : 
+                             'text-status-completed'}`}
+                        />
+                        <div className="flex justify-between mt-1">
+                          <span className="text-xs text-muted-foreground">{content.progress}%</span>
+                          {content.status !== 'completed' && (
+                            <span className="text-xs text-primary">
+                              {getWorkflowSteps(content.type)[Math.floor((content.progress / 100) * getWorkflowSteps(content.type).length)]}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <Button 
                       size="sm"
-                      asChild
-                      className="ml-3"
+                      onClick={() => navigate(`/edit/${content.type}/${content.id}`)}
+                      className="ml-3 whitespace-nowrap"
                     >
-                      <a href={`/edit/${content.type}/${content.id}`}>
-                        Fortsetzen
-                      </a>
+                      {content.status === 'feedback' ? 'Feedback geben' : 'Fortsetzen'}
                     </Button>
                   </div>
                 )
@@ -280,8 +295,8 @@ const ContentList = () => {
           ) : (
             <div className="bg-muted rounded-lg border border-border p-8 text-center">
               <p className="text-muted-foreground mb-4">Keine Inhalte gefunden</p>
-              <Button asChild>
-                <a href="/create/blog">Ersten Inhalt erstellen</a>
+              <Button onClick={() => navigate('/create/blog')}>
+                Ersten Inhalt erstellen
               </Button>
             </div>
           )}

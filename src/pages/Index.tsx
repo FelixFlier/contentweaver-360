@@ -2,7 +2,7 @@
 import React from 'react';
 import { FileText, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import ContentCarousel from '@/components/content/ContentCarousel';
 import ActivityTimeline from '@/components/activity/ActivityTimeline';
 import Navbar from '@/components/layout/Navbar';
@@ -84,6 +84,7 @@ const recentActivities = [
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -104,18 +105,23 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button asChild size="lg" className="w-full sm:w-auto">
-                <Link to="/create/blog" className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  Blog-Artikel erstellen
-                </Link>
+              <Button 
+                size="lg" 
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/create/blog')}
+              >
+                <FileText className="mr-2 h-5 w-5" />
+                Blog-Artikel erstellen
               </Button>
               
-              <Button asChild size="lg" variant="outline" className="w-full sm:w-auto">
-                <Link to="/create/linkedin" className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5" />
-                  LinkedIn-Post erstellen
-                </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="w-full sm:w-auto"
+                onClick={() => navigate('/create/linkedin')}
+              >
+                <FileText className="mr-2 h-5 w-5" />
+                LinkedIn-Post erstellen
               </Button>
             </div>
           </div>
@@ -148,8 +154,11 @@ const Index = () => {
                 Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen.
               </p>
               
-              <Button asChild variant="outline">
-                <Link to="/analysis">Zu Stilanalyse</Link>
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/analysis')}
+              >
+                Zu Stilanalyse
               </Button>
             </div>
           </div>

@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ContentCard, { ContentCardProps } from '@/components/content/ContentCard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 
 interface ContentCarouselProps {
   title: string;
@@ -12,8 +13,9 @@ interface ContentCarouselProps {
 }
 
 const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => {
-  const carouselRef = React.useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   // Sort items by priority: feedback > inProgress > completed
   const sortedItems = [...items].sort((a, b) => {
@@ -35,6 +37,27 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
     });
   };
 
+  useEffect(() => {
+    // Add a visual indicator for horizontal scrollability
+    const carousel = carouselRef.current;
+    if (!carousel || items.length <= 1) return;
+    
+    // Add shadow/gradient indicators based on scroll position
+    const handleScroll = () => {
+      const isAtStart = carousel.scrollLeft <= 10;
+      const isAtEnd = carousel.scrollLeft >= carousel.scrollWidth - carousel.clientWidth - 10;
+      
+      carousel.classList.toggle('shadow-left', !isAtStart);
+      carousel.classList.toggle('shadow-right', !isAtEnd);
+    };
+    
+    carousel.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
+    
+    return () => carousel.removeEventListener('scroll', handleScroll);
+  }, [items.length]);
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-4">
@@ -43,8 +66,12 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
         {!isMobile && items.length > 0 && (
           <div className="flex items-center gap-2">
             {seeAllLink && (
-              <Button variant="ghost" size="sm" asChild>
-                <a href={seeAllLink}>Alle anzeigen</a>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate(seeAllLink)}
+              >
+                Alle anzeigen
               </Button>
             )}
             
@@ -54,6 +81,7 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
                 size="icon" 
                 className="h-8 w-8 rounded-full"
                 onClick={() => scroll('left')}
+                disabled={items.length <= 1}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -62,6 +90,7 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
                 size="icon" 
                 className="h-8 w-8 rounded-full"
                 onClick={() => scroll('right')}
+                disabled={items.length <= 1}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -73,7 +102,11 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
       {items.length > 0 ? (
         <div 
           ref={carouselRef}
-          className="flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x"
+          className="flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x scroll-smooth"
+          style={{
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none' // IE/Edge
+          }}
         >
           {sortedItems.map((item) => (
             <div 
@@ -87,8 +120,8 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
       ) : (
         <div className="bg-muted rounded-lg border border-border p-6 text-center">
           <p className="text-muted-foreground mb-3">Keine Inhalte vorhanden</p>
-          <Button asChild>
-            <a href="/create/blog">Ersten Inhalt erstellen</a>
+          <Button onClick={() => navigate('/create/blog')}>
+            Ersten Inhalt erstellen
           </Button>
         </div>
       )}

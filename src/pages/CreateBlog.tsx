@@ -1,45 +1,54 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Link as LinkIcon, Plus } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  FileText, 
+  Send, 
+  Book, 
+  CheckCircle 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import Navbar from '@/components/layout/Navbar';
+import StepIndicator from '@/components/workflow/StepIndicator';
+import { Card, CardContent } from '@/components/ui/card';
+
+// Blog workflow steps
+const blogWorkflowSteps = [
+  { id: 'style-analysis', label: 'Stilanalyse' },
+  { id: 'research', label: 'Recherche' },
+  { id: 'planning', label: 'Planung' },
+  { id: 'writing', label: 'Schreiben' },
+  { id: 'fact-check', label: 'Faktenprüfung' },
+  { id: 'editing', label: 'Bearbeitung' },
+  { id: 'seo', label: 'SEO-Optimierung' },
+  { id: 'social', label: 'Social Media' },
+];
+
+// LinkedIn workflow steps
+const linkedinWorkflowSteps = [
+  { id: 'style-analysis', label: 'Stilanalyse' },
+  { id: 'planning', label: 'Planung' },
+  { id: 'writing', label: 'Schreiben' },
+  { id: 'editing', label: 'Bearbeitung' },
+  { id: 'social', label: 'Veröffentlichung' },
+];
+
+type ContentType = 'blog' | 'linkedin';
 
 const CreateBlog = () => {
   const navigate = useNavigate();
+  const contentType: ContentType = window.location.pathname.includes('linkedin') ? 'linkedin' : 'blog';
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [styleTemplate, setStyleTemplate] = useState('');
-  const [sources, setSources] = useState<string[]>(['']);
-  const [isCreating, setIsCreating] = useState(false);
-
-  const handleAddSource = () => {
-    setSources([...sources, '']);
-  };
-
-  const handleSourceChange = (index: number, value: string) => {
-    const newSources = [...sources];
-    newSources[index] = value;
-    setSources(newSources);
-  };
-
-  const handleRemoveSource = (index: number) => {
-    if (sources.length > 1) {
-      const newSources = [...sources];
-      newSources.splice(index, 1);
-      setSources(newSources);
-    }
-  };
+  const [style, setStyle] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const workflowSteps = contentType === 'blog' ? blogWorkflowSteps : linkedinWorkflowSteps;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,13 +58,13 @@ const CreateBlog = () => {
       return;
     }
     
-    setIsCreating(true);
+    setIsSubmitting(true);
     
     // Simulate API call
     setTimeout(() => {
-      toast.success("Blog-Artikel erstellt");
-      navigate("/edit/blog/new-article-id");
-      setIsCreating(false);
+      toast.success(`${contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} erstellt`);
+      navigate('/content');
+      setIsSubmitting(false);
     }, 1500);
   };
 
@@ -67,122 +76,94 @@ const CreateBlog = () => {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="mb-6" 
-          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center"
+          onClick={() => navigate('/')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Zurück
         </Button>
         
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-primary/10 p-2 rounded-full">
-            <FileText className="h-6 w-6 text-primary" />
+        <div className="mb-8 text-center">
+          <div className="rounded-full bg-primary/5 text-primary w-fit mx-auto px-4 py-1 text-sm font-medium mb-4">
+            {contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'}
           </div>
-          <h1 className="text-2xl font-bold">Neuen Blog-Artikel erstellen</h1>
+          
+          <h1 className="text-3xl font-bold mb-4">
+            Neuen {contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} erstellen
+          </h1>
+          
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Füllen Sie die folgenden Felder aus, um mit der Erstellung zu beginnen. 
+            Sie können später jederzeit Änderungen vornehmen.
+          </p>
         </div>
         
-        <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-card animate-fade-in">
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="title" className="block text-sm font-medium">
-                  Titel
-                </label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Geben Sie einen aussagekräftigen Titel ein"
-                  className="w-full"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="description" className="block text-sm font-medium">
-                  Thema/Beschreibung
-                </label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Beschreiben Sie das Thema und die wichtigsten Punkte"
-                  rows={4}
-                  className="w-full"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="styleTemplate" className="block text-sm font-medium">
-                  Stilvorlage (optional)
-                </label>
-                <Select value={styleTemplate} onValueChange={setStyleTemplate}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Wählen Sie eine Stilvorlage" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="informative">Informativ & Sachlich</SelectItem>
-                    <SelectItem value="conversational">Konversationell & Persönlich</SelectItem>
-                    <SelectItem value="persuasive">Überzeugend & Werbend</SelectItem>
-                    <SelectItem value="storytelling">Erzählend & Narrativ</SelectItem>
-                    <SelectItem value="technical">Technisch & Detailliert</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="block text-sm font-medium">
-                  Quellen (optional)
-                </label>
+        <div className="mb-8">
+          <StepIndicator 
+            steps={workflowSteps}
+            currentStep="style-analysis"
+            completedSteps={[]}
+          />
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title" className="text-base font-medium">
+                    Titel
+                  </Label>
+                  <Input 
+                    id="title"
+                    placeholder={`${contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} Titel...`}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="mt-2 text-lg"
+                  />
+                </div>
                 
-                <div className="space-y-3">
-                  {sources.map((source, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={source}
-                        onChange={(e) => handleSourceChange(index, e.target.value)}
-                        placeholder="URL oder Referenz eingeben"
-                        className="flex-1"
-                        prefix={<LinkIcon className="h-4 w-4 text-muted-foreground mr-2" />}
-                      />
-                      {index > 0 && (
-                        <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleRemoveSource(index)}
-                        >
-                          ✕
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddSource}
-                    className="flex items-center"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Quelle hinzufügen
-                  </Button>
+                <div>
+                  <Label htmlFor="description" className="text-base font-medium">
+                    Beschreibung / Hauptthemen
+                  </Label>
+                  <Textarea 
+                    id="description"
+                    placeholder="Beschreiben Sie kurz, worum es in Ihrem Inhalt gehen soll..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="mt-2 min-h-24"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="style" className="text-base font-medium">
+                    Stilvorlage (optional)
+                  </Label>
+                  <Textarea 
+                    id="style"
+                    placeholder="Beschreiben Sie den gewünschten Schreibstil oder verweisen Sie auf ein Stilprofil..."
+                    value={style}
+                    onChange={(e) => setStyle(e.target.value)}
+                    className="mt-2"
+                  />
                 </div>
               </div>
-              
-              <div className="pt-4">
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  size="lg"
-                  disabled={isCreating}
-                >
-                  {isCreating ? 'Wird erstellt...' : 'Erstellen'}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </div>
+            </CardContent>
+          </Card>
+          
+          <div className="flex justify-center">
+            <Button 
+              type="submit" 
+              size="lg" 
+              disabled={isSubmitting}
+              className="min-w-40"
+            >
+              {isSubmitting ? "Wird erstellt..." : "Erstellen"}
+              {!isSubmitting && <Send className="ml-2 h-4 w-4" />}
+            </Button>
+          </div>
+        </form>
       </main>
     </div>
   );

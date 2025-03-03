@@ -1,4 +1,6 @@
 
+// Since EditBlog.tsx is a large file, I'll focus on updating the relevant parts
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Save, MessageSquare } from 'lucide-react';
@@ -11,14 +13,23 @@ import StepIndicator from '@/components/workflow/StepIndicator';
 
 // Blog workflow steps
 const blogWorkflowSteps = [
-  { id: 'style-analysis', label: 'Stilanalyse' },
-  { id: 'research', label: 'Recherche' },
-  { id: 'planning', label: 'Planung' },
-  { id: 'writing', label: 'Schreiben' },
-  { id: 'fact-check', label: 'Faktenprüfung' },
-  { id: 'editing', label: 'Bearbeitung' },
-  { id: 'seo', label: 'SEO-Optimierung' },
-  { id: 'social', label: 'Social Media' },
+  { id: 'style-analysis', label: 'Stilanalyse', description: 'Analyse und Anpassung des Schreibstils' },
+  { id: 'research', label: 'Recherche', description: 'Sammlung und Bewertung von Quellen' },
+  { id: 'planning', label: 'Planung', description: 'Gliederung und Strukturierung des Inhalts' },
+  { id: 'writing', label: 'Schreiben', description: 'Erstellung des Inhalts' },
+  { id: 'fact-check', label: 'Faktenprüfung', description: 'Überprüfung der Fakten und Quellen' },
+  { id: 'editing', label: 'Bearbeitung', description: 'Korrekturlesen und Verbesserung' },
+  { id: 'seo', label: 'SEO-Optimierung', description: 'Anpassung für Suchmaschinen' },
+  { id: 'social', label: 'Social Media', description: 'Vorbereitung für Social Media' },
+];
+
+// LinkedIn workflow steps
+const linkedinWorkflowSteps = [
+  { id: 'style-analysis', label: 'Stilanalyse', description: 'Analyse und Anpassung des Schreibstils' },
+  { id: 'planning', label: 'Planung', description: 'Gliederung und Strukturierung des Inhalts' },
+  { id: 'writing', label: 'Schreiben', description: 'Erstellung des Inhalts' },
+  { id: 'editing', label: 'Bearbeitung', description: 'Korrekturlesen und Verbesserung' },
+  { id: 'social', label: 'Veröffentlichung', description: 'Vorbereitung zur Veröffentlichung' },
 ];
 
 // Mock blog data
@@ -28,23 +39,39 @@ const mockBlogData = {
   currentStep: 'writing',
   completedSteps: ['style-analysis', 'research', 'planning'],
   needsFeedback: true,
+  type: 'blog'
+};
+
+// Mock LinkedIn data
+const mockLinkedInData = {
+  title: 'Warum Innovation der Schlüssel zum Erfolg ist',
+  content: 'Innovation ist nicht nur ein Buzzword, sondern der entscheidende Faktor für langfristigen Erfolg...',
+  currentStep: 'writing',
+  completedSteps: ['style-analysis', 'planning'],
+  needsFeedback: true,
+  type: 'linkedin'
 };
 
 const EditBlog = () => {
-  const { id } = useParams();
+  const { id, type } = useParams();
   const navigate = useNavigate();
-  const [blog, setBlog] = useState(mockBlogData);
-  const [content, setContent] = useState(mockBlogData.content);
+  const contentType = window.location.pathname.includes('linkedin') ? 'linkedin' : 'blog';
+  const initialData = contentType === 'blog' ? mockBlogData : mockLinkedInData;
+  
+  const [content, setContent] = useState(initialData.content);
+  const [blog, setBlog] = useState(initialData);
   const [feedback, setFeedback] = useState('');
   const [activeTab, setActiveTab] = useState<string>('editor');
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  
+  const workflowSteps = contentType === 'blog' ? blogWorkflowSteps : linkedinWorkflowSteps;
 
   useEffect(() => {
-    // In a real app, fetch blog data based on ID
-    console.log(`Fetching blog data for ID: ${id}`);
+    // In a real app, fetch data based on ID and type
+    console.log(`Fetching ${contentType} data for ID: ${id}`);
     // setBlog(...) would happen here after fetching
-  }, [id]);
+  }, [id, contentType]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -102,8 +129,8 @@ const EditBlog = () => {
               Zurück
             </Button>
             
-            <div className="bg-primary/10 p-2 rounded-full">
-              <FileText className="h-5 w-5 text-primary" />
+            <div className={`p-2 rounded-full ${contentType === 'blog' ? 'bg-primary/10' : 'bg-secondary/10'}`}>
+              <FileText className={`h-5 w-5 ${contentType === 'blog' ? 'text-primary' : 'text-secondary'}`} />
             </div>
             
             <h1 className="text-xl font-bold truncate">{blog.title}</h1>
@@ -134,7 +161,7 @@ const EditBlog = () => {
         
         <div className="mb-8">
           <StepIndicator 
-            steps={blogWorkflowSteps}
+            steps={workflowSteps}
             currentStep={blog.currentStep}
             completedSteps={blog.completedSteps}
           />

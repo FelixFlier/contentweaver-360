@@ -34,6 +34,11 @@
     --ring: 242 76% 55%; /* Same as primary */
     
     --radius: 0.5rem; /* 8px */
+
+    /* Status colors */
+    --status-inprogress: 217 91% 60%; /* Blue #3B82F6 */
+    --status-feedback: 38 92% 50%; /* Orange #F59E0B */
+    --status-completed: 152 60% 40%; /* Green #10B981 */
   }
 
   * {
@@ -62,4 +67,64 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Custom scrollbar utilities */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Shadow indicators for carousel */
+  .shadow-left::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 30px;
+    background: linear-gradient(to right, rgba(255,255,255,0.8), rgba(255,255,255,0));
+    z-index: 1;
+    pointer-events: none;
+  }
+  
+  .shadow-right::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 30px;
+    background: linear-gradient(to left, rgba(255,255,255,0.8), rgba(255,255,255,0));
+    z-index: 1;
+    pointer-events: none;
+  }
+}
+
+/* Tailwind doesn't generate these automatically, so we add them manually */
+.bg-status-inprogress {
+  background-color: hsl(217, 91%, 60%);
+}
+
+.bg-status-feedback {
+  background-color: hsl(38, 92%, 50%);
+}
+
+.bg-status-completed {
+  background-color: hsl(152, 60%, 40%);
+}
+
+.text-status-inprogress {
+  color: hsl(217, 91%, 60%);
+}
+
+.text-status-feedback {
+  color: hsl(38, 92%, 50%);
+}
+
+.text-status-completed {
+  color: hsl(152, 60%, 40%);
 }
