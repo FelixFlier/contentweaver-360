@@ -172,10 +172,10 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Wichtige Änderung: Fixed Positioning mit eigenem Hintergrund */}
       {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 top-16 bg-background animate-fade-in z-40">
-          <div className="flex flex-col p-4 space-y-4">
+        <div className="fixed inset-0 top-16 bg-background/95 backdrop-blur-sm z-40 animate-fade-in">
+          <div className="flex flex-col p-4 space-y-4 max-h-[calc(100vh-64px)] overflow-auto">
             <Button 
               variant="ghost"
               onClick={() => handleNavigation('/create/blog')}

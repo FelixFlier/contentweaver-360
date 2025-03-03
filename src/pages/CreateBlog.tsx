@@ -6,7 +6,8 @@ import {
   FileText, 
   Send, 
   Book, 
-  CheckCircle 
+  CheckCircle,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 import Navbar from '@/components/layout/Navbar';
 import StepIndicator from '@/components/workflow/StepIndicator';
 import { Card, CardContent } from '@/components/ui/card';
+import StyleSelector from '@/components/style/StyleSelector';
 
 // Blog workflow steps
 const blogWorkflowSteps = [
@@ -45,7 +47,7 @@ const CreateBlog = () => {
   const contentType: ContentType = window.location.pathname.includes('linkedin') ? 'linkedin' : 'blog';
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [style, setStyle] = useState('');
+  const [styleId, setStyleId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const workflowSteps = contentType === 'blog' ? blogWorkflowSteps : linkedinWorkflowSteps;
@@ -83,16 +85,18 @@ const CreateBlog = () => {
           Zurück
         </Button>
         
-        <div className="mb-8 text-center">
-          <div className="rounded-full bg-primary/5 text-primary w-fit mx-auto px-4 py-1 text-sm font-medium mb-4">
-            {contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`p-2 rounded-full ${contentType === 'blog' ? 'bg-primary/10' : 'bg-secondary/10'}`}>
+              <FileText className={`h-5 w-5 ${contentType === 'blog' ? 'text-primary' : 'text-secondary'}`} />
+            </div>
+            
+            <h1 className="text-2xl font-bold">
+              Neuen {contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} erstellen
+            </h1>
           </div>
           
-          <h1 className="text-3xl font-bold mb-4">
-            Neuen {contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} erstellen
-          </h1>
-          
-          <p className="text-muted-foreground max-w-lg mx-auto">
+          <p className="text-muted-foreground max-w-lg">
             Füllen Sie die folgenden Felder aus, um mit der Erstellung zu beginnen. 
             Sie können später jederzeit Änderungen vornehmen.
           </p>
@@ -107,9 +111,15 @@ const CreateBlog = () => {
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-          <Card>
+          <Card className="overflow-hidden border-border">
+            <div className="bg-gradient-to-r from-primary/5 to-secondary/5 px-6 py-4 border-b border-border">
+              <h2 className="text-lg font-medium flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Grundinformationen
+              </h2>
+            </div>
             <CardContent className="pt-6">
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
                   <Label htmlFor="title" className="text-base font-medium">
                     Titel
@@ -136,31 +146,26 @@ const CreateBlog = () => {
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="style" className="text-base font-medium">
-                    Stilvorlage (optional)
-                  </Label>
-                  <Textarea 
-                    id="style"
-                    placeholder="Beschreiben Sie den gewünschten Schreibstil oder verweisen Sie auf ein Stilprofil..."
-                    value={style}
-                    onChange={(e) => setStyle(e.target.value)}
-                    className="mt-2"
-                  />
-                </div>
+                <StyleSelector 
+                  selectedStyle={styleId}
+                  onChange={setStyleId}
+                />
               </div>
             </CardContent>
           </Card>
           
-          <div className="flex justify-center">
+          <div className="flex justify-center mt-8">
             <Button 
               type="submit" 
               size="lg" 
               disabled={isSubmitting}
-              className="min-w-40"
+              className="relative overflow-hidden group min-w-40"
             >
-              {isSubmitting ? "Wird erstellt..." : "Erstellen"}
-              {!isSubmitting && <Send className="ml-2 h-4 w-4" />}
+              <span className="relative z-10 flex items-center">
+                {isSubmitting ? "Wird erstellt..." : "Erstellen"}
+                {!isSubmitting && <Send className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />}
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity"></span>
             </Button>
           </div>
         </form>
