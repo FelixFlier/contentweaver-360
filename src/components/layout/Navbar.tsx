@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   FileText, 
@@ -28,7 +28,7 @@ const NAV_STEPS = [
 ];
 
 const Navbar = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,7 +56,7 @@ const Navbar = () => {
           <span className="font-semibold hidden sm:inline-block">ContentWeaver</span>
         </div>
 
-        {/* Main Navigation - Always visible */}
+        {/* Main Navigation - Always visible on desktop */}
         <div className={`${isMobile ? 'hidden' : 'flex'} flex-grow items-center justify-center gap-2`}>
           {NAV_STEPS.map((step) => (
             <Button 
@@ -107,7 +107,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Navigation Menu - Show as full screen when active */}
+      {/* Mobile Navigation - Full Screen Menu */}
       {isMobile && (
         <div 
           className={`fixed inset-0 top-16 z-40 bg-background transition-opacity duration-300 ${
@@ -115,7 +115,6 @@ const Navbar = () => {
               ? 'opacity-100 pointer-events-auto' 
               : 'opacity-0 pointer-events-none'
           }`}
-          onClick={() => setMobileMenuOpen(false)}
         >
           <div className="flex flex-col p-4 space-y-2">
             {NAV_STEPS.map((step) => (
@@ -154,7 +153,7 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* Mobile Menu Toggle */}
+      {/* Mobile Menu Toggle Button */}
       {isMobile && (
         <div className="fixed bottom-4 right-4 z-50">
           <Button 
