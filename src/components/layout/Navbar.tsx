@@ -1,15 +1,12 @@
 
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Bell, 
   ChevronDown, 
   FileText, 
   Folder, 
   Menu, 
   Plus, 
-  Search, 
-  Settings, 
   Sparkles, 
   X 
 } from 'lucide-react';
@@ -23,15 +20,30 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+// Define our main navigation steps
+const NAV_STEPS = [
+  { name: 'Start', path: '/', icon: <Sparkles className="h-4 w-4 mr-2" /> },
+  { name: 'Meine Inhalte', path: '/content', icon: <Folder className="h-4 w-4 mr-2" /> },
+  { name: 'Stilanalyse', path: '/analysis', icon: <Sparkles className="h-4 w-4 mr-2" /> },
+  { name: 'Blog erstellen', path: '/create/blog', icon: <FileText className="h-4 w-4 mr-2" /> },
+  { name: 'LinkedIn erstellen', path: '/create/linkedin', icon: <FileText className="h-4 w-4 mr-2" /> },
+];
+
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Use navigate instead of direct links to prevent page reload
   const handleNavigation = (path: string) => {
     setMobileMenuOpen(false);
     navigate(path);
+  };
+
+  // Check if the current path matches a navigation item
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -46,89 +58,29 @@ const Navbar = () => {
           <span className="font-semibold hidden sm:inline-block">ContentWeaver</span>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation with 5 main steps */}
         {!isMobile && (
-          <div className="flex items-center justify-center gap-8">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Content erstellen
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-[200px]">
-                <DropdownMenuItem 
-                  onClick={() => handleNavigation('/create/blog')}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <FileText className="h-4 w-4" />
-                  Blog-Artikel
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleNavigation('/create/linkedin')}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <FileText className="h-4 w-4" />
-                  LinkedIn-Post
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/content')}
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              Meine Inhalte
-            </Button>
-
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/analysis')}
-              className="text-foreground/80 hover:text-foreground transition-colors"
-            >
-              Stilanalyse
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-1 text-foreground/80 hover:text-foreground">
-                  Ressourcen
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-[200px]">
-                <DropdownMenuItem
-                  onClick={() => handleNavigation('/resources/documents')}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Folder className="h-4 w-4" />
-                  Dokumente
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleNavigation('/resources/sources')}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <FileText className="h-4 w-4" />
-                  Quellen
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center justify-center gap-4">
+            {NAV_STEPS.map((step) => (
+              <Button 
+                key={step.path}
+                variant={isActive(step.path) ? "default" : "ghost"}
+                onClick={() => handleNavigation(step.path)}
+                className={`transition-all duration-300 ${
+                  isActive(step.path) 
+                    ? "text-primary-foreground bg-primary relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary-foreground" 
+                    : "text-foreground/80 hover:text-foreground hover:bg-accent"
+                }`}
+              >
+                {step.icon}
+                {step.name}
+              </Button>
+            ))}
           </div>
         )}
 
-        {/* Right-side Elements */}
+        {/* Right-side Elements - only user avatar */}
         <div className="flex items-center gap-2 md:gap-4">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-            <Search className="h-5 w-5" />
-          </Button>
-          
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
-          </Button>
-          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -149,7 +101,6 @@ const Navbar = () => {
                 onClick={() => handleNavigation('/settings')}
                 className="flex items-center gap-2 cursor-pointer"
               >
-                <Settings className="h-4 w-4" />
                 Einstellungen
               </DropdownMenuItem>
               <DropdownMenuItem className="text-destructive">
@@ -172,66 +123,53 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu - Korrigiert: Feste Positionierung mit eigenem Abgedecktem Hintergrund */}
+      {/* Mobile Menu - Fixed with dark overlay */}
       {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 top-16 bg-background z-40 animate-fade-in">
-          <div className="flex flex-col p-4 space-y-4 max-h-[calc(100vh-64px)] overflow-auto">
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/create/blog')}
-              className="flex items-center gap-2 p-3 bg-primary/5 rounded-md hover:bg-primary/10 transition-colors justify-start"
-            >
-              <FileText className="h-5 w-5 text-primary" />
-              Blog-Artikel erstellen
-            </Button>
-            
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/create/linkedin')}
-              className="flex items-center gap-2 p-3 bg-secondary/5 rounded-md hover:bg-secondary/10 transition-colors justify-start"
-            >
-              <FileText className="h-5 w-5 text-secondary" />
-              LinkedIn-Post erstellen
-            </Button>
-            
-            <div className="h-px w-full bg-border my-2"></div>
-            
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/content')}
-              className="flex items-center gap-2 p-3 hover:bg-muted rounded-md transition-colors justify-start"
-            >
-              <Folder className="h-5 w-5" />
-              Meine Inhalte
-            </Button>
-            
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/analysis')}
-              className="flex items-center gap-2 p-3 hover:bg-muted rounded-md transition-colors justify-start"
-            >
-              <Sparkles className="h-5 w-5" />
-              Stilanalyse
-            </Button>
+        <div className="fixed inset-0 top-16 z-40">
+          {/* Dark semi-transparent overlay */}
+          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
+          
+          {/* Menu content */}
+          <div className="relative flex flex-col p-4 space-y-4 max-h-[calc(100vh-64px)] overflow-auto z-10">
+            {NAV_STEPS.map((step) => (
+              <Button 
+                key={step.path}
+                variant={isActive(step.path) ? "default" : "ghost"}
+                onClick={() => handleNavigation(step.path)}
+                className={`flex items-center gap-2 p-3 justify-start ${
+                  isActive(step.path)
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted"
+                }`}
+              >
+                {React.cloneElement(step.icon, { className: "h-5 w-5" })}
+                {step.name}
+              </Button>
+            ))}
             
             <div className="h-px w-full bg-border my-2"></div>
             
             <Button 
               variant="ghost"
-              onClick={() => handleNavigation('/resources/documents')}
+              onClick={() => handleNavigation('/profile')}
               className="flex items-center gap-2 p-3 hover:bg-muted rounded-md transition-colors justify-start"
             >
-              <Folder className="h-5 w-5" />
-              Dokumente
+              Profil
             </Button>
             
             <Button 
               variant="ghost"
-              onClick={() => handleNavigation('/resources/sources')}
+              onClick={() => handleNavigation('/settings')}
               className="flex items-center gap-2 p-3 hover:bg-muted rounded-md transition-colors justify-start"
             >
-              <FileText className="h-5 w-5" />
-              Quellen
+              Einstellungen
+            </Button>
+            
+            <Button 
+              variant="ghost"
+              className="flex items-center gap-2 p-3 hover:bg-destructive/10 text-destructive rounded-md transition-colors justify-start"
+            >
+              Abmelden
             </Button>
           </div>
         </div>
