@@ -6,7 +6,9 @@ import {
   Folder, 
   Search, 
   Sparkles, 
-  TrendingUp
+  TrendingUp,
+  BookOpen,
+  Lightbulb
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -22,9 +24,12 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const NAV_STEPS = [
   { name: 'Start', path: '/', icon: <Sparkles className="h-4 w-4 mr-2" /> },
   { name: 'Inhalte', path: '/content', icon: <Folder className="h-4 w-4 mr-2" /> },
-  { name: 'Research', path: '/research', icon: <Search className="h-4 w-4 mr-2" /> },
   { name: 'Blog', path: '/create/blog', icon: <FileText className="h-4 w-4 mr-2" /> },
+  { name: 'LinkedIn', path: '/create/linkedin', icon: <FileText className="h-4 w-4 mr-2" /> },
+  { name: 'Research', path: '/research', icon: <Search className="h-4 w-4 mr-2" /> },
   { name: 'SEO', path: '/seo', icon: <TrendingUp className="h-4 w-4 mr-2" /> },
+  { name: 'Stilanalyse', path: '/analysis', icon: <Sparkles className="h-4 w-4 mr-2" /> },
+  { name: 'Quellen', path: '/resources/sources', icon: <Lightbulb className="h-4 w-4 mr-2" /> },
 ];
 
 const Navbar = () => {
@@ -56,8 +61,8 @@ const Navbar = () => {
           <span className="font-semibold hidden sm:inline-block">ContentWeaver</span>
         </div>
 
-        {/* Main Navigation - Always visible on desktop */}
-        <div className={`${isMobile ? 'hidden' : 'flex'} flex-grow items-center justify-center gap-2`}>
+        {/* Main Navigation - Desktop View */}
+        <div className={`${isMobile ? 'hidden' : 'flex'} flex-grow items-center justify-center gap-2 overflow-x-auto`}>
           {NAV_STEPS.map((step) => (
             <Button 
               key={step.path}

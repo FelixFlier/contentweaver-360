@@ -27,6 +27,9 @@ const App = () => (
           <Route path="/edit/linkedin/:id" element={<EditBlog />} />
           <Route path="/analysis" element={<StyleAnalysis />} />
           <Route path="/content" element={<ContentList />} />
+          <Route path="/research" element={<NotFound />} />
+          <Route path="/seo" element={<NotFound />} />
+          <Route path="/resources/sources" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
