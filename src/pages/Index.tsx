@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight } from 'lucide-react';
+import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight, Search, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import ContentCarousel from '@/components/content/ContentCarousel';
@@ -8,7 +7,6 @@ import ActivityTimeline from '@/components/activity/ActivityTimeline';
 import Navbar from '@/components/layout/Navbar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-// Mock data for demo purposes
 const recentContents = [
   {
     id: '1',
@@ -148,8 +146,8 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Feature Cards - Neu hinzugefügt */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        {/* Feature Cards - Updated with Research and SEO Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
             <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
               <Sparkles className="h-6 w-6 text-primary" />
@@ -170,48 +168,38 @@ const Index = () => {
           
           <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
             <div className="mb-4 bg-secondary/10 w-12 h-12 flex items-center justify-center rounded-full">
-              <Lightbulb className="h-6 w-6 text-secondary" />
+              <Search className="h-6 w-6 text-secondary" />
             </div>
-            <h3 className="text-xl font-semibold mb-3">Quellen verwalten</h3>
+            <h3 className="text-xl font-semibold mb-3">Research Agent</h3>
             <p className="text-muted-foreground mb-5">
-              Fügen Sie Quellen und Dokumente hinzu, um qualitativ hochwertige und gut recherchierte Inhalte zu erstellen.
+              Nutzen Sie KI-gestützte Recherche, um fundierte Argumente und aktuelle Daten für Ihre Inhalte zu finden.
             </p>
             <Button 
               variant="ghost" 
               className="text-secondary flex items-center gap-2"
-              onClick={() => navigate('/resources/sources')}
+              onClick={() => navigate('/research')}
             >
-              Zu Quellen
+              Zu Research
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </section>
-
-        {/* Quick Access Feature - überarbeitet */}
-        <section className="glassmorphism-enhanced rounded-xl p-6 md:p-8 max-w-2xl mx-auto overflow-hidden relative">
-          <div className="absolute -bottom-12 -right-12 w-36 h-36 bg-primary/5 rounded-full blur-3xl -z-10"></div>
-          <div className="absolute -top-8 -left-8 w-28 h-28 bg-secondary/5 rounded-full blur-2xl -z-10"></div>
           
-          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 z-10 relative">
-            <div className="bg-secondary/10 rounded-full p-4 animate-pulse-subtle">
-              <Sparkles className="h-8 w-8 text-secondary" />
+          <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
+            <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
+              <TrendingUp className="h-6 w-6 text-primary" />
             </div>
-            
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-xl font-semibold mb-2">Probieren Sie die Stilanalyse</h3>
-              <p className="text-muted-foreground mb-5">
-                Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen und den perfekten Ton für Ihre Zielgruppe zu treffen.
-              </p>
-              
-              <Button 
-                variant="outline"
-                onClick={() => navigate('/analysis')}
-                className="border-2"
-              >
-                Zu Stilanalyse
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
+            <h3 className="text-xl font-semibold mb-3">SEO Optimierer</h3>
+            <p className="text-muted-foreground mb-5">
+              Optimieren Sie Ihre Inhalte für Suchmaschinen und verbessern Sie Ihre Rankings mit datengestützten Empfehlungen.
+            </p>
+            <Button 
+              variant="ghost" 
+              className="text-primary flex items-center gap-2"
+              onClick={() => navigate('/seo')}
+            >
+              Zu SEO
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </section>
       </main>
