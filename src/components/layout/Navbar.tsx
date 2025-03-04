@@ -2,13 +2,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  ChevronDown, 
   FileText, 
   Folder, 
-  Menu, 
-  Plus, 
+  Search, 
   Sparkles, 
-  X 
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -23,10 +21,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 // Define our main navigation steps
 const NAV_STEPS = [
   { name: 'Start', path: '/', icon: <Sparkles className="h-4 w-4 mr-2" /> },
-  { name: 'Meine Inhalte', path: '/content', icon: <Folder className="h-4 w-4 mr-2" /> },
-  { name: 'Stilanalyse', path: '/analysis', icon: <Sparkles className="h-4 w-4 mr-2" /> },
-  { name: 'Blog erstellen', path: '/create/blog', icon: <FileText className="h-4 w-4 mr-2" /> },
-  { name: 'LinkedIn erstellen', path: '/create/linkedin', icon: <FileText className="h-4 w-4 mr-2" /> },
+  { name: 'Inhalte', path: '/content', icon: <Folder className="h-4 w-4 mr-2" /> },
+  { name: 'Research', path: '/research', icon: <Search className="h-4 w-4 mr-2" /> },
+  { name: 'Blog', path: '/create/blog', icon: <FileText className="h-4 w-4 mr-2" /> },
+  { name: 'SEO', path: '/seo', icon: <TrendingUp className="h-4 w-4 mr-2" /> },
 ];
 
 const Navbar = () => {
@@ -52,35 +50,33 @@ const Navbar = () => {
         {/* Logo */}
         <div 
           onClick={() => handleNavigation('/')}
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2 cursor-pointer mr-4"
         >
           <Sparkles className="h-6 w-6 text-primary" />
           <span className="font-semibold hidden sm:inline-block">ContentWeaver</span>
         </div>
 
-        {/* Desktop Navigation with 5 main steps */}
-        {!isMobile && (
-          <div className="flex items-center justify-center gap-4">
-            {NAV_STEPS.map((step) => (
-              <Button 
-                key={step.path}
-                variant={isActive(step.path) ? "default" : "ghost"}
-                onClick={() => handleNavigation(step.path)}
-                className={`transition-all duration-300 ${
-                  isActive(step.path) 
-                    ? "text-primary-foreground bg-primary relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary-foreground" 
-                    : "text-foreground/80 hover:text-foreground hover:bg-accent"
-                }`}
-              >
-                {step.icon}
-                {step.name}
-              </Button>
-            ))}
-          </div>
-        )}
+        {/* Main Navigation - Always visible */}
+        <div className={`${isMobile ? 'hidden' : 'flex'} flex-grow items-center justify-center gap-2`}>
+          {NAV_STEPS.map((step) => (
+            <Button 
+              key={step.path}
+              variant={isActive(step.path) ? "default" : "ghost"}
+              onClick={() => handleNavigation(step.path)}
+              className={`transition-all duration-300 ${
+                isActive(step.path) 
+                  ? "text-primary-foreground bg-primary relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary-foreground" 
+                  : "text-foreground/80 hover:text-foreground hover:bg-accent"
+              }`}
+            >
+              {step.icon}
+              {step.name}
+            </Button>
+          ))}
+        </div>
 
-        {/* Right-side Elements - only user avatar */}
-        <div className="flex items-center gap-2 md:gap-4">
+        {/* User Avatar - Right aligned */}
+        <div className="flex items-center ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -108,70 +104,66 @@ const Navbar = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          {/* Mobile Menu Toggle */}
-          {isMobile && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          )}
         </div>
       </nav>
 
-      {/* Mobile Menu - Fixed with dark overlay */}
-      {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 top-16 z-40">
-          {/* Dark semi-transparent overlay */}
-          <div className="absolute inset-0 bg-background/95 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
-          
-          {/* Menu content */}
-          <div className="relative flex flex-col p-4 space-y-4 max-h-[calc(100vh-64px)] overflow-auto z-10">
+      {/* Mobile Navigation Menu - Show as full screen when active */}
+      {isMobile && (
+        <div 
+          className={`fixed inset-0 top-16 z-40 bg-background transition-opacity duration-300 ${
+            mobileMenuOpen 
+              ? 'opacity-100 pointer-events-auto' 
+              : 'opacity-0 pointer-events-none'
+          }`}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div className="flex flex-col p-4 space-y-2">
             {NAV_STEPS.map((step) => (
               <Button 
                 key={step.path}
                 variant={isActive(step.path) ? "default" : "ghost"}
                 onClick={() => handleNavigation(step.path)}
-                className={`flex items-center gap-2 p-3 justify-start ${
-                  isActive(step.path)
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted"
-                }`}
+                className="justify-start w-full"
               >
-                {React.cloneElement(step.icon, { className: "h-5 w-5" })}
+                {React.cloneElement(step.icon, { className: "h-5 w-5 mr-2" })}
                 {step.name}
               </Button>
             ))}
-            
             <div className="h-px w-full bg-border my-2"></div>
-            
             <Button 
               variant="ghost"
               onClick={() => handleNavigation('/profile')}
-              className="flex items-center gap-2 p-3 hover:bg-muted rounded-md transition-colors justify-start"
+              className="justify-start w-full"
             >
               Profil
             </Button>
-            
             <Button 
               variant="ghost"
               onClick={() => handleNavigation('/settings')}
-              className="flex items-center gap-2 p-3 hover:bg-muted rounded-md transition-colors justify-start"
+              className="justify-start w-full"
             >
               Einstellungen
             </Button>
-            
             <Button 
               variant="ghost"
-              className="flex items-center gap-2 p-3 hover:bg-destructive/10 text-destructive rounded-md transition-colors justify-start"
+              className="justify-start w-full text-destructive"
             >
               Abmelden
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Mobile Menu Toggle */}
+      {isMobile && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button 
+            variant="default" 
+            className="rounded-full h-12 w-12 shadow-lg"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+          >
+            {mobileMenuOpen ? "×" : "≡"}
+          </Button>
         </div>
       )}
     </header>
