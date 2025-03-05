@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight, Search, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import ContentCarousel from '@/components/content/ContentCarousel';
 import ActivityTimeline from '@/components/activity/ActivityTimeline';
 import Navbar from '@/components/layout/Navbar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Card, CardContent } from '@/components/ui/card';
 
 const recentContents = [
   {
@@ -84,12 +86,58 @@ const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
+  // Feature cards data to match menu items
+  const featureCards = [
+    {
+      title: 'Blog-Artikel',
+      description: 'Erstellen Sie professionelle Blog-Artikel mit KI-Unterstützung und verbessern Sie Ihre Online-Präsenz.',
+      icon: <FileText className="h-6 w-6 text-primary" />,
+      path: '/create/blog',
+      color: 'primary'
+    },
+    {
+      title: 'LinkedIn-Posts',
+      description: 'Gestalten Sie wirkungsvolle LinkedIn-Posts, die Ihre berufliche Marke stärken und mehr Engagement erzielen.',
+      icon: <FileText className="h-6 w-6 text-secondary" />,
+      path: '/create/linkedin',
+      color: 'secondary'
+    },
+    {
+      title: 'Stilanalyse',
+      description: 'Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen und konsistent zu bleiben.',
+      icon: <Sparkles className="h-6 w-6 text-primary" />,
+      path: '/analysis',
+      color: 'primary'
+    },
+    {
+      title: 'Research Agent',
+      description: 'Nutzen Sie KI-gestützte Recherche, um fundierte Argumente und aktuelle Daten für Ihre Inhalte zu finden.',
+      icon: <Search className="h-6 w-6 text-secondary" />,
+      path: '/research',
+      color: 'secondary'
+    },
+    {
+      title: 'SEO Optimierer',
+      description: 'Optimieren Sie Ihre Inhalte für Suchmaschinen und verbessern Sie Ihre Rankings mit datengestützten Empfehlungen.',
+      icon: <TrendingUp className="h-6 w-6 text-primary" />,
+      path: '/seo',
+      color: 'primary'
+    },
+    {
+      title: 'Quellenmanagement',
+      description: 'Verwalten Sie Ihre Quellen und Referenzen effizient, um die Glaubwürdigkeit Ihrer Inhalte zu erhöhen.',
+      icon: <Lightbulb className="h-6 w-6 text-secondary" />,
+      path: '/resources/sources',
+      color: 'secondary'
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="container px-4 pt-24 pb-16 mx-auto">
-        {/* Hero Section - modernisiert */}
+        {/* Hero Section */}
         <section className="mb-16 animate-fade-in">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <div className="gradient-border inline-block rounded-full bg-primary/5 text-primary px-4 py-1.5 text-sm font-medium mb-5">
@@ -131,76 +179,69 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Content Section - verbessert */}
+          {/* Improved Content Section */}
           <div className="w-full mb-12 animate-slide-in">
-            <ContentCarousel 
-              title="Aktuelle Inhalte" 
-              items={recentContents}
-              seeAllLink="/content"
-            />
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Meine Inhalte</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/content')}
+                  className="text-primary"
+                >
+                  Alle anzeigen
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+              
+              <ContentCarousel 
+                title="" 
+                items={recentContents}
+                seeAllLink="/content"
+              />
+            </div>
           </div>
           
-          {/* Activity Timeline */}
-          <div className="w-full max-w-2xl mx-auto animate-slide-in">
-            <ActivityTimeline activities={recentActivities} />
+          {/* Activity Timeline in a Card */}
+          <div className="w-full max-w-2xl mx-auto mb-12 animate-slide-in">
+            <Card>
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-4">Aktivitäten</h2>
+                <ActivityTimeline activities={recentActivities} />
+              </CardContent>
+            </Card>
           </div>
         </section>
 
-        {/* Feature Cards - Updated with Research and SEO Cards */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
-            <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
-              <Sparkles className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">Stilanalyse</h3>
-            <p className="text-muted-foreground mb-5">
-              Lassen Sie Ihren Schreibstil analysieren, um bessere Inhalte zu erstellen und konsistent zu bleiben.
-            </p>
-            <Button 
-              variant="ghost" 
-              className="text-primary flex items-center gap-2"
-              onClick={() => navigate('/analysis')}
+        {/* Feature Cards Grid - Now covering all menu items */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {featureCards.map((card, index) => (
+            <div 
+              key={index} 
+              className="card-modern p-6 hover:shadow-lg transition-all duration-300 cursor-pointer"
+              onClick={() => navigate(card.path)}
             >
-              Zu Stilanalyse
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
-            <div className="mb-4 bg-secondary/10 w-12 h-12 flex items-center justify-center rounded-full">
-              <Search className="h-6 w-6 text-secondary" />
+              <div className={`mb-4 bg-${card.color}/10 w-12 h-12 flex items-center justify-center rounded-full`}>
+                {card.icon}
+              </div>
+              <h3 className="text-xl font-semibold mb-3">{card.title}</h3>
+              <p className="text-muted-foreground mb-5">
+                {card.description}
+              </p>
+              <Button 
+                variant="ghost" 
+                className={`text-${card.color} flex items-center gap-2`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(card.path);
+                }}
+              >
+                Öffnen
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
-            <h3 className="text-xl font-semibold mb-3">Research Agent</h3>
-            <p className="text-muted-foreground mb-5">
-              Nutzen Sie KI-gestützte Recherche, um fundierte Argumente und aktuelle Daten für Ihre Inhalte zu finden.
-            </p>
-            <Button 
-              variant="ghost" 
-              className="text-secondary flex items-center gap-2"
-              onClick={() => navigate('/research')}
-            >
-              Zu Research
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="card-modern p-6 hover:shadow-lg transition-all duration-300">
-            <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
-              <TrendingUp className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3">SEO Optimierer</h3>
-            <p className="text-muted-foreground mb-5">
-              Optimieren Sie Ihre Inhalte für Suchmaschinen und verbessern Sie Ihre Rankings mit datengestützten Empfehlungen.
-            </p>
-            <Button 
-              variant="ghost" 
-              className="text-primary flex items-center gap-2"
-              onClick={() => navigate('/seo')}
-            >
-              Zu SEO
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          ))}
         </section>
       </main>
     </div>
