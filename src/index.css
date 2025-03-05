@@ -45,7 +45,7 @@
     --background: 240 10% 3.9%; /* Dark background #18181B */
     --foreground: 0 0% 98%; /* Light text #F9FAFB */
     
-    --card: 240 10% 3.9%; /* Dark card background */
+    --card: 240 10% 8%; /* Darker card background #1A1C23 */
     --card-foreground: 0 0% 98%; /* Light card text */
     
     --popover: 240 10% 3.9%; /* Dark popover */

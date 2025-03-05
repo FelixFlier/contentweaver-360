@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -8,7 +7,8 @@ import {
   Sparkles, 
   TrendingUp,
   BookOpen,
-  Lightbulb
+  Lightbulb,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -20,8 +20,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { useTutorial } from '@/hooks/use-tutorial';
 
-// Define our main navigation steps
 const NAV_STEPS = [
   { name: 'Start', path: '/', icon: <Sparkles className="h-4 w-4 mr-2" /> },
   { name: 'Inhalte', path: '/content', icon: <Folder className="h-4 w-4 mr-2" /> },
@@ -38,14 +38,13 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { setShowTutorial } = useTutorial();
   
-  // Use navigate instead of direct links to prevent page reload
   const handleNavigation = (path: string) => {
     setMobileMenuOpen(false);
     navigate(path);
   };
 
-  // Check if the current path matches a navigation item
   const isActive = (path: string) => {
     return location.pathname === path;
   };
@@ -53,7 +52,6 @@ const Navbar = () => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glassmorphism animate-fade-in">
       <nav className="container mx-auto flex h-16 md:h-[64px] items-center justify-between px-4">
-        {/* Logo */}
         <div 
           onClick={() => handleNavigation('/')}
           className="flex items-center gap-2 cursor-pointer mr-4"
@@ -62,7 +60,6 @@ const Navbar = () => {
           <span className="font-semibold hidden sm:inline-block">ContentWeaver</span>
         </div>
 
-        {/* Main Navigation - Desktop View */}
         <div className={`${isMobile ? 'hidden' : 'flex'} flex-grow items-center justify-center gap-2 overflow-x-auto`}>
           {NAV_STEPS.map((step) => (
             <Button 
@@ -81,9 +78,20 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* User Avatar and Theme Toggle - Right aligned */}
         <div className="flex items-center ml-auto gap-2">
-          <ThemeToggle />
+          {!isMobile && <ThemeToggle />}
+          
+          {isMobile && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTutorial(true)}
+              aria-label="Open tutorial"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
+            </Button>
+          )}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -115,7 +123,6 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Navigation - Full Screen Menu */}
       {isMobile && (
         <div 
           className={`fixed inset-0 top-16 z-40 bg-background transition-opacity duration-300 ${
@@ -161,7 +168,6 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* Mobile Menu Toggle Button */}
       {isMobile && (
         <div className="fixed bottom-4 right-4 z-50">
           <Button 

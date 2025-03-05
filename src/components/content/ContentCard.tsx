@@ -96,7 +96,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-card overflow-hidden transition-all duration-300 hover:shadow-lg group">
+    <div className="bg-card rounded-lg border border-border shadow-card overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card/95 dark:backdrop-blur-sm">
       <div className="p-4">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
           ></div>
         </div>
         
-        <div className="flex items-center justify-between mt-5 pt-3 border-t border-border">
+        <div className="flex items-center justify-between mt-5 pt-3 border-t border-border dark:border-border/30">
           <div className="flex items-center text-xs text-muted-foreground">
             <Clock className="h-3 w-3 mr-1" />
             {lastUpdated}

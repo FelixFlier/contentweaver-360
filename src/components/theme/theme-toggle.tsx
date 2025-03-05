@@ -1,28 +1,42 @@
 
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, HelpCircle } from "lucide-react";
 import { useTheme } from "./theme-provider";
+import { useTutorial } from "@/hooks/use-tutorial";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const { setShowTutorial } = useTutorial();
 
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={toggleTheme}
-      aria-label="Toggle theme"
-      className="text-muted-foreground hover:text-foreground"
-    >
-      {theme === "light" ? (
-        <Moon className="h-[1.2rem] w-[1.2rem]" />
-      ) : (
-        <Sun className="h-[1.2rem] w-[1.2rem]" />
-      )}
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setShowTutorial(true)}
+        aria-label="Open tutorial"
+        className="text-muted-foreground hover:text-foreground"
+      >
+        <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
+      </Button>
+      
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+        className="text-muted-foreground hover:text-foreground"
+      >
+        {theme === "light" ? (
+          <Moon className="h-[1.2rem] w-[1.2rem]" />
+        ) : (
+          <Sun className="h-[1.2rem] w-[1.2rem]" />
+        )}
+      </Button>
+    </div>
   );
 }
