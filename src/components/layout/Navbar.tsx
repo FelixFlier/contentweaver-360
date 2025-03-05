@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 // Define our main navigation steps
 const NAV_STEPS = [
@@ -80,8 +81,10 @@ const Navbar = () => {
           ))}
         </div>
 
-        {/* User Avatar - Right aligned */}
-        <div className="flex items-center ml-auto">
+        {/* User Avatar and Theme Toggle - Right aligned */}
+        <div className="flex items-center ml-auto gap-2">
+          <ThemeToggle />
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">

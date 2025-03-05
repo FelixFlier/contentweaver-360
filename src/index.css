@@ -41,6 +41,41 @@
     --status-completed: 152 60% 40%; /* Green #10B981 */
   }
 
+  .dark {
+    --background: 240 10% 3.9%; /* Dark background #18181B */
+    --foreground: 0 0% 98%; /* Light text #F9FAFB */
+    
+    --card: 240 10% 3.9%; /* Dark card background */
+    --card-foreground: 0 0% 98%; /* Light card text */
+    
+    --popover: 240 10% 3.9%; /* Dark popover */
+    --popover-foreground: 0 0% 98%; /* Light popover text */
+    
+    --primary: 242 76% 55%; /* Keep primary the same for brand consistency */
+    --primary-foreground: 0 0% 98%; /* Light text on primary */
+    
+    --secondary: 168 68% 45%; /* Slightly darker secondary */
+    --secondary-foreground: 240 10% 3.9%; /* Dark text on secondary */
+    
+    --muted: 240 3.7% 15.9%; /* Dark muted background #262626 */
+    --muted-foreground: 240 5% 64.9%; /* Light muted text #A1A1AA */
+    
+    --accent: 240 3.7% 15.9%; /* Dark accent background */
+    --accent-foreground: 0 0% 98%; /* Light accent text */
+    
+    --destructive: 0 62.8% 30.6%; /* Darker red for destructive */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+    
+    --border: 240 3.7% 15.9%; /* Dark border */
+    --input: 240 3.7% 15.9%; /* Dark input background */
+    --ring: 242 76% 55%; /* Keep ring the same */
+
+    /* Status colors - adjusted for dark mode */
+    --status-inprogress: 217 91% 60%; /* Blue remains the same */
+    --status-feedback: 38 92% 50%; /* Orange remains the same */
+    --status-completed: 152 60% 46%; /* Slightly brighter green for dark mode */
+  }
+
   * {
     @apply border-border selection:bg-primary/10 selection:text-primary;
   }
@@ -61,7 +96,7 @@
   }
   
   .glassmorphism {
-    @apply bg-white/95 backdrop-blur-sm border border-white/20 shadow-navbar;
+    @apply bg-white/95 backdrop-blur-sm border border-white/20 shadow-navbar dark:bg-black/60 dark:border-white/10;
   }
 
   .text-balance {
@@ -70,13 +105,13 @@
 
   /* Enhanced glassmorphism effect */
   .glassmorphism-enhanced {
-    @apply bg-white/80 backdrop-blur-md border border-white/30 shadow-lg;
+    @apply bg-white/80 backdrop-blur-md border border-white/30 shadow-lg dark:bg-black/50 dark:border-white/10;
     background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
   }
   
   /* Modern card styles */
   .card-modern {
-    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300;
+    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 dark:bg-gray-800/80 dark:hover:bg-gray-800;
     background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 1));
   }
   
@@ -150,6 +185,14 @@
     background: linear-gradient(to left, rgba(255,255,255,0.8), rgba(255,255,255,0));
     z-index: 1;
     pointer-events: none;
+  }
+
+  .dark .shadow-left::before {
+    background: linear-gradient(to right, rgba(24,24,27,0.8), rgba(24,24,27,0));
+  }
+  
+  .dark .shadow-right::after {
+    background: linear-gradient(to left, rgba(24,24,27,0.8), rgba(24,24,27,0));
   }
   
   /* Modern button hover effects */
