@@ -4,7 +4,11 @@ import { Moon, Sun, HelpCircle } from "lucide-react";
 import { useTheme } from "./theme-provider";
 import { useTutorial } from "@/hooks/use-tutorial";
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  showHelpIcon?: boolean;
+}
+
+export function ThemeToggle({ showHelpIcon = true }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const { setShowTutorial } = useTutorial();
 
@@ -14,15 +18,17 @@ export function ThemeToggle() {
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setShowTutorial(true)}
-        aria-label="Open tutorial"
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
-      </Button>
+      {showHelpIcon && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowTutorial(true)}
+          aria-label="Open tutorial"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
+        </Button>
+      )}
       
       <Button
         variant="ghost"

@@ -7,8 +7,7 @@ import {
   Sparkles, 
   TrendingUp,
   BookOpen,
-  Lightbulb,
-  HelpCircle
+  Lightbulb
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -38,7 +37,6 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
-  const { setShowTutorial } = useTutorial();
   
   const handleNavigation = (path: string) => {
     setMobileMenuOpen(false);
@@ -79,18 +77,10 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center ml-auto gap-2">
-          {!isMobile && <ThemeToggle />}
+          <ThemeToggle showHelpIcon={!isMobile} />
           
           {isMobile && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowTutorial(true)}
-              aria-label="Open tutorial"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <HelpCircle className="h-[1.2rem] w-[1.2rem]" />
-            </Button>
+            <ThemeToggle showHelpIcon={true} />
           )}
           
           <DropdownMenu>
