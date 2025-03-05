@@ -96,7 +96,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
   };
 
   return (
-    <div className="bg-white rounded-lg border border-border shadow-card overflow-hidden transition-all duration-300 hover:shadow-lg group">
+    <div className="bg-card rounded-lg border border-border shadow-card overflow-hidden transition-all duration-300 hover:shadow-lg group">
       <div className="p-4">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">

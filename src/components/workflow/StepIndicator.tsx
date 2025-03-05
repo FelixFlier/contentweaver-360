@@ -67,7 +67,7 @@ const StepIndicator = ({ steps, currentStep, completedSteps }: StepIndicatorProp
                         className={cn(
                           "flex items-center justify-center w-9 h-9 rounded-full transition-all z-10 cursor-pointer",
                           isCompleted ? "bg-status-completed text-white shadow-sm" : 
-                                    isCurrent ? "bg-primary text-white shadow-[0_0_0_4px_rgba(58,54,224,0.25)]" : 
+                                    isCurrent ? "bg-primary text-primary-foreground shadow-[0_0_0_4px_rgba(58,54,224,0.25)]" : 
                                     "bg-muted text-muted-foreground border border-border"
                         )}
                         onClick={() => toggleTooltip(activeTooltip === step.id ? null : step.id)}
@@ -81,7 +81,7 @@ const StepIndicator = ({ steps, currentStep, completedSteps }: StepIndicatorProp
                     </TooltipTrigger>
                     <TooltipContent 
                       side="bottom"
-                      className="p-4 max-w-[220px] bg-white shadow-lg rounded-lg border"
+                      className="p-4 max-w-[220px] bg-card shadow-lg rounded-lg border border-border"
                     >
                       <div className="space-y-2">
                         <h3 className="font-medium text-sm">{step.label}</h3>

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight, Search, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +7,8 @@ import ActivityTimeline from '@/components/activity/ActivityTimeline';
 import Navbar from '@/components/layout/Navbar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent } from '@/components/ui/card';
+import TutorialDialog from '@/components/tutorial/TutorialDialog';
+import { useTutorial } from '@/hooks/use-tutorial';
 
 const recentContents = [
   {
@@ -85,8 +86,15 @@ const recentActivities = [
 const Index = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { hasSeenTutorial, showTutorial, setHasSeenTutorial, setShowTutorial } = useTutorial();
 
-  // Feature cards data to match menu items
+  useEffect(() => {
+    if (!hasSeenTutorial) {
+      setShowTutorial(true);
+      setHasSeenTutorial(true);
+    }
+  }, [hasSeenTutorial, setHasSeenTutorial, setShowTutorial]);
+
   const featureCards = [
     {
       title: 'Blog-Artikel',
@@ -136,8 +144,9 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
+      <TutorialDialog open={showTutorial} onOpenChange={setShowTutorial} />
+      
       <main className="container px-4 pt-24 pb-16 mx-auto">
-        {/* Hero Section */}
         <section className="mb-16 animate-fade-in">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <div className="gradient-border inline-block rounded-full bg-primary/5 text-primary px-4 py-1.5 text-sm font-medium mb-5">
@@ -179,7 +188,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Improved Content Section */}
           <div className="w-full mb-12 animate-slide-in">
             <div className="bg-card rounded-xl shadow-sm border border-border p-6">
               <div className="flex items-center justify-between mb-4">
@@ -203,7 +211,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Activity Timeline in a Card */}
           <div className="w-full max-w-2xl mx-auto mb-12 animate-slide-in">
             <Card>
               <CardContent className="pt-6">
@@ -214,12 +221,11 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Feature Cards Grid - Now covering all menu items */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {featureCards.map((card, index) => (
             <div 
               key={index} 
-              className="card-modern p-6 hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="card-modern p-6 hover:shadow-lg transition-all duration-300 cursor-pointer dark:bg-card dark:border dark:border-border"
               onClick={() => navigate(card.path)}
             >
               <div className={`mb-4 bg-${card.color}/10 w-12 h-12 flex items-center justify-center rounded-full`}>
