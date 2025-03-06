@@ -293,14 +293,19 @@ const Navbar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 animate-fade-in bg-card dark:bg-[#1E1E1E]">
-              <DropdownMenuLabel>Mein Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
               <DropdownMenuItem 
-                onClick={handleLogout}
-                className="text-destructive flex items-center gap-2 cursor-pointer"
+                onClick={openLoginModal}
+                className="flex items-center gap-2 cursor-pointer"
               >
-                <LogOut className="h-4 w-4" />
-                <span>Abmelden</span>
+                <LogIn className="h-4 w-4" />
+                <span>Anmelden</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={openRegisterModal}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span>Registrieren</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
