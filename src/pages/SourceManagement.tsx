@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Lightbulb, Plus, ExternalLink, Trash2, BookmarkIcon, Check } from 'lucide-react';
+import { Lightbulb, Plus, ExternalLink, Trash2, BookmarkIcon, Check, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
 
 type Source = {
   id: string;
@@ -22,6 +25,7 @@ type Source = {
 };
 
 const SourceManagement = () => {
+  const navigate = useNavigate();
   const [sources, setSources] = useState<Source[]>([
     {
       id: '1',
@@ -61,6 +65,7 @@ const SourceManagement = () => {
   });
   const [newTag, setNewTag] = useState('');
   const [isAddingSource, setIsAddingSource] = useState(false);
+  const [showInputPanel, setShowInputPanel] = useState(false);
 
   const handleAddSource = () => {
     if (!newSource.title || !newSource.url || !newSource.type) return;
@@ -84,6 +89,7 @@ const SourceManagement = () => {
       tags: []
     });
     setIsAddingSource(false);
+    toast.success('Quelle erfolgreich hinzugefügt');
   };
 
   const handleAddTag = () => {
@@ -104,6 +110,55 @@ const SourceManagement = () => {
 
   const handleRemoveSource = (id: string) => {
     setSources(sources.filter(source => source.id !== id));
+    toast.success('Quelle erfolgreich entfernt');
+  };
+
+  const handleSaveAll = () => {
+    toast.success('Alle Quellen wurden gespeichert');
+  };
+
+  const handleInputSubmit = (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
+    if (data.type === 'text') {
+      // Parse text content to extract potential source information
+      const content = data.content as string;
+      const lines = content.split('\n');
+      
+      if (lines.length > 0) {
+        const title = lines[0].trim();
+        let url = '';
+        let author = '';
+        
+        // Try to extract URL and author from text
+        lines.forEach(line => {
+          if (line.startsWith('http') || line.includes('www.')) {
+            url = line.trim();
+          } else if (line.includes('von') || line.includes('by') || line.includes('Author')) {
+            author = line.replace(/von|by|Author:?/gi, '').trim();
+          }
+        });
+        
+        setNewSource({
+          ...newSource,
+          title,
+          url,
+          author
+        });
+        
+        setIsAddingSource(true);
+        toast.info('Quelleninformationen extrahiert. Bitte überprüfen und ergänzen Sie die Daten.');
+      }
+    } else if (data.type === 'link') {
+      setNewSource({
+        ...newSource,
+        url: data.content as string,
+        title: 'Neue Quelle von ' + new URL(data.content as string).hostname
+      });
+      setIsAddingSource(true);
+    } else {
+      toast.info('Diese Funktion wird bald verfügbar sein');
+    }
+    
+    setShowInputPanel(false);
   };
 
   const filteredSources = sources.filter(source =>
@@ -124,6 +179,28 @@ const SourceManagement = () => {
       <Navbar />
       
       <main className="container px-4 pt-24 pb-16 mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Zurück
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Schließen
+          </Button>
+        </div>
+        
         <section className="mb-8 animate-fade-in">
           <div className="max-w-3xl mx-auto mb-12 text-center">
             <div className="gradient-border inline-block rounded-full bg-primary/5 text-primary px-4 py-1.5 text-sm font-medium mb-5">
@@ -153,102 +230,137 @@ const SourceManagement = () => {
                 />
               </div>
               
-              <Dialog open={isAddingSource} onOpenChange={setIsAddingSource}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Neue Quelle
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[525px]">
-                  <DialogHeader>
-                    <DialogTitle>Neue Quelle hinzufügen</DialogTitle>
-                    <DialogDescription>
-                      Fügen Sie die Details Ihrer Quelle hinzu. Die URL ist wichtig für spätere Referenzen.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title">Titel</Label>
-                      <Input
-                        id="title"
-                        placeholder="Titel der Quelle"
-                        value={newSource.title || ''}
-                        onChange={(e) => setNewSource({...newSource, title: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="url">URL</Label>
-                      <Input
-                        id="url"
-                        placeholder="https://example.com"
-                        value={newSource.url || ''}
-                        onChange={(e) => setNewSource({...newSource, url: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="author">Autor (optional)</Label>
-                      <Input
-                        id="author"
-                        placeholder="Name des Autors"
-                        value={newSource.author || ''}
-                        onChange={(e) => setNewSource({...newSource, author: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="type">Typ</Label>
-                      <Select
-                        defaultValue={newSource.type || 'article'}
-                        onValueChange={(value) => setNewSource({...newSource, type: value as any})}
-                      >
-                        <SelectTrigger id="type">
-                          <SelectValue placeholder="Wählen Sie einen Typ" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="article">Artikel</SelectItem>
-                          <SelectItem value="book">Buch</SelectItem>
-                          <SelectItem value="study">Studie</SelectItem>
-                          <SelectItem value="website">Webseite</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Tags</Label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {newSource.tags && newSource.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                            {tag}
-                            <button 
-                              onClick={() => handleRemoveTag(tag)}
-                              className="ml-1 rounded-full hover:bg-destructive/10 p-0.5"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Neuer Tag"
-                          value={newTag}
-                          onChange={(e) => setNewTag(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                        />
-                        <Button type="button" size="sm" onClick={handleAddTag}>
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsAddingSource(false)}>Abbrechen</Button>
-                    <Button onClick={handleAddSource} disabled={!newSource.title || !newSource.url}>
-                      Hinzufügen
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowInputPanel(!showInputPanel)} 
+                  className="gap-2"
+                >
+                  {showInputPanel ? 'Panel ausblenden' : 'Quelle importieren'}
+                </Button>
+                
+                <Dialog open={isAddingSource} onOpenChange={setIsAddingSource}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Neue Quelle
                     </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[525px] bg-card dark:bg-[#1E1E1E]">
+                    <DialogHeader>
+                      <DialogTitle>Neue Quelle hinzufügen</DialogTitle>
+                      <DialogDescription>
+                        Fügen Sie die Details Ihrer Quelle hinzu. Die URL ist wichtig für spätere Referenzen.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Titel</Label>
+                        <Input
+                          id="title"
+                          placeholder="Titel der Quelle"
+                          value={newSource.title || ''}
+                          onChange={(e) => setNewSource({...newSource, title: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="url">URL</Label>
+                        <Input
+                          id="url"
+                          placeholder="https://example.com"
+                          value={newSource.url || ''}
+                          onChange={(e) => setNewSource({...newSource, url: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="author">Autor (optional)</Label>
+                        <Input
+                          id="author"
+                          placeholder="Name des Autors"
+                          value={newSource.author || ''}
+                          onChange={(e) => setNewSource({...newSource, author: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="type">Typ</Label>
+                        <Select
+                          defaultValue={newSource.type || 'article'}
+                          onValueChange={(value) => setNewSource({...newSource, type: value as any})}
+                        >
+                          <SelectTrigger id="type">
+                            <SelectValue placeholder="Wählen Sie einen Typ" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="article">Artikel</SelectItem>
+                            <SelectItem value="book">Buch</SelectItem>
+                            <SelectItem value="study">Studie</SelectItem>
+                            <SelectItem value="website">Webseite</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Tags</Label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {newSource.tags && newSource.tags.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                              {tag}
+                              <button 
+                                onClick={() => handleRemoveTag(tag)}
+                                className="ml-1 rounded-full hover:bg-destructive/10 p-0.5"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Neuer Tag"
+                            value={newTag}
+                            onChange={(e) => setNewTag(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                          />
+                          <Button type="button" size="sm" onClick={handleAddTag}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddingSource(false)}>Abbrechen</Button>
+                      <Button onClick={handleAddSource} disabled={!newSource.title || !newSource.url}>
+                        Hinzufügen
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                
+                <Button 
+                  variant="outline"
+                  onClick={handleSaveAll}
+                  disabled={sources.length === 0}
+                >
+                  Alle speichern
+                </Button>
+              </div>
             </div>
+            
+            {showInputPanel && (
+              <Card className="mb-6 bg-card dark:bg-[#1E1E1E]">
+                <CardHeader>
+                  <CardTitle>Quelle importieren</CardTitle>
+                  <CardDescription>
+                    Fügen Sie Text, einen Link oder eine Datei ein, um eine neue Quelle zu erstellen
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <UnifiedInputPanel
+                    onSubmit={handleInputSubmit}
+                    placeholder="Fügen Sie Text mit Quelleninformationen ein oder geben Sie einen Link an..."
+                  />
+                </CardContent>
+              </Card>
+            )}
             
             <Tabs defaultValue="all">
               <TabsList className="mb-4">
@@ -261,7 +373,7 @@ const SourceManagement = () => {
               
               <TabsContent value="all">
                 {filteredSources.length === 0 ? (
-                  <Card>
+                  <Card className="bg-card dark:bg-[#1E1E1E]">
                     <CardContent className="flex flex-col items-center justify-center py-12">
                       <Lightbulb className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
                       <p className="text-muted-foreground text-center">
@@ -285,7 +397,7 @@ const SourceManagement = () => {
               {Object.entries(sourcesByType).map(([type, sources]) => (
                 <TabsContent key={type} value={type}>
                   {sources.length === 0 ? (
-                    <Card>
+                    <Card className="bg-card dark:bg-[#1E1E1E]">
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <Lightbulb className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
                         <p className="text-muted-foreground text-center">
@@ -319,7 +431,7 @@ const SourceManagement = () => {
 // Source Card Component
 const SourceCard = ({ source, onRemove }: { source: Source; onRemove: (id: string) => void }) => {
   return (
-    <Card>
+    <Card className="bg-card dark:bg-[#1E1E1E]">
       <CardHeader className="pb-2">
         <div className="flex justify-between">
           <div>

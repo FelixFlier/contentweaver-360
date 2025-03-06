@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { TrendingUp, CheckCircle, AlertCircle, Sparkles, MoveUp } from 'lucide-react';
+import { TrendingUp, CheckCircle, AlertCircle, Sparkles, MoveUp, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import Navbar from '@/components/layout/Navbar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 type SeoSuggestion = {
   id: string;
@@ -17,6 +20,7 @@ type SeoSuggestion = {
 };
 
 const SeoOptimizer = () => {
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [keywords, setKeywords] = useState('');
   const [seoScore, setSeoScore] = useState<number | null>(null);
@@ -77,6 +81,10 @@ const SeoOptimizer = () => {
     }
   };
 
+  const handleSave = () => {
+    toast.success('SEO-Optimierungen wurden gespeichert');
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-500';
     if (score >= 60) return 'text-amber-500';
@@ -95,6 +103,28 @@ const SeoOptimizer = () => {
       <Navbar />
       
       <main className="container px-4 pt-24 pb-16 mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Zurück
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Schließen
+          </Button>
+        </div>
+        
         <section className="mb-8 animate-fade-in">
           <div className="max-w-3xl mx-auto mb-12 text-center">
             <div className="gradient-border inline-block rounded-full bg-primary/5 text-primary px-4 py-1.5 text-sm font-medium mb-5">
@@ -115,7 +145,7 @@ const SeoOptimizer = () => {
           
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
-              <Card>
+              <Card className="bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>Inhalt analysieren</CardTitle>
                   <CardDescription>
@@ -137,20 +167,28 @@ const SeoOptimizer = () => {
                     placeholder="Fügen Sie hier Ihren Inhalt ein..."
                   />
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex justify-between">
                   <Button 
                     onClick={handleAnalyze} 
                     disabled={isAnalyzing || content.trim() === ''}
-                    className="w-full"
+                    className="w-full mr-2"
                   >
                     {isAnalyzing ? 'Analysiere...' : 'SEO analysieren'}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleSave}
+                    disabled={!seoScore}
+                    className="w-full ml-2"
+                  >
+                    Speichern
                   </Button>
                 </CardFooter>
               </Card>
             </div>
             
             <div className="md:col-span-1">
-              <Card>
+              <Card className="bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>SEO Score</CardTitle>
                   <CardDescription>
@@ -202,7 +240,7 @@ const SeoOptimizer = () => {
           
           {suggestions.length > 0 && (
             <div className="max-w-4xl mx-auto mt-8">
-              <Card>
+              <Card className="bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>SEO-Verbesserungsvorschläge</CardTitle>
                   <CardDescription>

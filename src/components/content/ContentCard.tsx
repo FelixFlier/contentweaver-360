@@ -107,7 +107,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm card-shadow overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card dark:backdrop-blur-sm">
+    <div className="bg-card rounded-lg border border-border shadow-sm card-shadow overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-[#1E1E1E]">
       <div className="p-4 dark:card-content">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">

@@ -1,14 +1,18 @@
 
 import React, { useState } from 'react';
-import { Search, BookOpen, FileCheck, BookmarkIcon } from 'lucide-react';
+import { Search, BookOpen, FileCheck, BookmarkIcon, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
 
 const ResearchAgent = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -62,11 +66,50 @@ const ResearchAgent = () => {
     }
   };
 
+  const handleInputSubmit = (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
+    if (data.type === 'text') {
+      setSearchQuery(data.content as string);
+      handleSearch();
+    } else {
+      toast.info('Diese Funktion wird bald verfügbar sein');
+    }
+  };
+
+  const handleSave = () => {
+    if (searchResults.length > 0) {
+      toast.success('Rechercheergebnisse wurden gespeichert');
+    } else {
+      toast.error('Keine Ergebnisse zum Speichern vorhanden');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="container px-4 pt-24 pb-16 mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Zurück
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Schließen
+          </Button>
+        </div>
+        
         <section className="mb-8 animate-fade-in">
           <div className="max-w-3xl mx-auto mb-12 text-center">
             <div className="gradient-border inline-block rounded-full bg-primary/5 text-primary px-4 py-1.5 text-sm font-medium mb-5">
@@ -86,7 +129,7 @@ const ResearchAgent = () => {
           </div>
           
           <div className="max-w-4xl mx-auto">
-            <Card className="mb-8">
+            <Card className="mb-8 bg-card dark:bg-[#1E1E1E]">
               <CardHeader>
                 <CardTitle>Recherche starten</CardTitle>
                 <CardDescription>
@@ -94,22 +137,28 @@ const ResearchAgent = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="z.B. 'KI im Marketing' oder 'Aktuelle Statistiken zur digitalen Transformation'"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleSearch} 
-                    disabled={isSearching || searchQuery.trim() === ''}
-                  >
-                    {isSearching ? 'Suche läuft...' : 'Suchen'}
-                  </Button>
-                </div>
+                <UnifiedInputPanel 
+                  onSubmit={handleInputSubmit}
+                  placeholder="z.B. 'KI im Marketing' oder 'Aktuelle Statistiken zur digitalen Transformation'"
+                />
               </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button 
+                  onClick={handleSearch} 
+                  disabled={isSearching || searchQuery.trim() === ''}
+                  className="w-full mr-2"
+                >
+                  {isSearching ? 'Suche läuft...' : 'Suchen'}
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={handleSave}
+                  disabled={searchResults.length === 0}
+                  className="w-full ml-2"
+                >
+                  Speichern
+                </Button>
+              </CardFooter>
             </Card>
 
             {isSearching && (
@@ -135,7 +184,7 @@ const ResearchAgent = () => {
                 <TabsContent value="all">
                   <div className="space-y-4">
                     {searchResults.map((result) => (
-                      <Card key={result.id} className="hover:shadow-md transition-shadow">
+                      <Card key={result.id} className="hover:shadow-md transition-shadow bg-card dark:bg-[#1E1E1E]">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-start">
                             <CardTitle className="text-lg">{result.title}</CardTitle>
@@ -176,8 +225,7 @@ const ResearchAgent = () => {
                     {searchResults
                       .filter(result => result.type === 'article')
                       .map((result) => (
-                        <Card key={result.id} className="hover:shadow-md transition-shadow">
-                          {/* Same card structure as above */}
+                        <Card key={result.id} className="hover:shadow-md transition-shadow bg-card dark:bg-[#1E1E1E]">
                           <CardHeader className="pb-2">
                             <div className="flex justify-between items-start">
                               <CardTitle className="text-lg">{result.title}</CardTitle>
@@ -216,8 +264,7 @@ const ResearchAgent = () => {
                     {searchResults
                       .filter(result => result.type === 'statistics')
                       .map((result) => (
-                        <Card key={result.id} className="hover:shadow-md transition-shadow">
-                          {/* Same card structure as above */}
+                        <Card key={result.id} className="hover:shadow-md transition-shadow bg-card dark:bg-[#1E1E1E]">
                           <CardHeader className="pb-2">
                             <div className="flex justify-between items-start">
                               <CardTitle className="text-lg">{result.title}</CardTitle>

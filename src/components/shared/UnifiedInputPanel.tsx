@@ -103,6 +103,7 @@ const UnifiedInputPanel = ({ onSubmit, placeholder = "Fügen Sie hier Ihren Text
               <Input
                 type="file"
                 className="hidden"
+                id="file-upload"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -113,7 +114,10 @@ const UnifiedInputPanel = ({ onSubmit, placeholder = "Fügen Sie hier Ihren Text
               />
             </div>
             <Button 
-              onClick={() => document.querySelector('input[type="file"]')?.click()}
+              onClick={() => {
+                const fileInput = document.getElementById('file-upload') as HTMLInputElement;
+                if (fileInput) fileInput.click();
+              }}
               className="w-full"
             >
               Datei auswählen

@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Sparkles, Check, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Navbar from '@/components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
@@ -94,15 +95,27 @@ const StyleAnalysis = () => {
       <Navbar />
       
       <main className="container px-4 pt-24 pb-16 mx-auto">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="mb-6"
-          onClick={() => navigate('/')}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Zurück
-        </Button>
+        <div className="flex justify-between items-center mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Zurück
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/')}
+            className="gap-2"
+          >
+            <X className="h-4 w-4" />
+            Schließen
+          </Button>
+        </div>
         
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-secondary/10 p-2 rounded-full">
@@ -113,14 +126,24 @@ const StyleAnalysis = () => {
         
         <div className="max-w-4xl mx-auto">
           {!result ? (
-            <UnifiedInputPanel 
-              onSubmit={handleInputSubmit}
-              placeholder="Fügen Sie hier einen Beispieltext ein (mindestens 100 Zeichen)..."
-            />
+            <Card className="bg-card dark:bg-[#1E1E1E]">
+              <CardHeader>
+                <CardTitle>Stilanalyse durchführen</CardTitle>
+                <CardDescription>
+                  Fügen Sie einen Beispieltext ein, um Ihren Schreibstil zu analysieren
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UnifiedInputPanel 
+                  onSubmit={handleInputSubmit}
+                  placeholder="Fügen Sie hier einen Beispieltext ein (mindestens 100 Zeichen)..."
+                />
+              </CardContent>
+            </Card>
           ) : (
           <div className="animate-fade-in">
             <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <Card className="shadow-card">
+              <Card className="shadow-card bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>Stilmetriken</CardTitle>
                   <CardDescription>
@@ -142,7 +165,7 @@ const StyleAnalysis = () => {
                 </CardContent>
               </Card>
               
-              <Card className="shadow-card">
+              <Card className="shadow-card bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>Stilrichtlinien</CardTitle>
                   <CardDescription>
@@ -163,7 +186,7 @@ const StyleAnalysis = () => {
             </div>
             
             <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <Card className="shadow-card">
+              <Card className="shadow-card bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>Stärken</CardTitle>
                 </CardHeader>
@@ -179,7 +202,7 @@ const StyleAnalysis = () => {
                 </CardContent>
               </Card>
               
-              <Card className="shadow-card">
+              <Card className="shadow-card bg-card dark:bg-[#1E1E1E]">
                 <CardHeader>
                   <CardTitle>Verbesserungspotential</CardTitle>
                 </CardHeader>
