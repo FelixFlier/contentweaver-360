@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Sparkles, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import Navbar from '@/components/layout/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
+import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
 
 interface StyleMetric {
   name: string;
@@ -79,11 +79,21 @@ const StyleAnalysis = () => {
     setSampleText('');
   };
 
+  const handleInputSubmit = (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
+    if (data.type === 'text') {
+      setSampleText(data.content as string);
+      handleAnalyze();
+    } else {
+      // Handle other input types as needed
+      toast.info('Diese Funktion wird bald verfügbar sein');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container px-4 pt-24 pb-16 mx-auto max-w-4xl">
+      <main className="container px-4 pt-24 pb-16 mx-auto">
         <Button 
           variant="ghost" 
           size="sm" 
@@ -101,35 +111,13 @@ const StyleAnalysis = () => {
           <h1 className="text-2xl font-bold">Stilanalyse-Tool</h1>
         </div>
         
-        {!result ? (
-          <Card className="shadow-card animate-fade-in">
-            <CardHeader>
-              <CardTitle>Ihren Stil analysieren</CardTitle>
-              <CardDescription>
-                Fügen Sie Beispieltexte ein, um Ihren Schreibstil zu analysieren und maßgeschneiderte Empfehlungen zu erhalten.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                value={sampleText}
-                onChange={(e) => setSampleText(e.target.value)}
-                placeholder="Fügen Sie hier einen Beispieltext ein (mindestens 100 Zeichen)..."
-                className="min-h-[300px] mb-4"
-              />
-              
-              <div className="flex justify-end">
-                <Button 
-                  onClick={handleAnalyze} 
-                  disabled={isAnalyzing}
-                  className="flex items-center"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  {isAnalyzing ? 'Analyse läuft...' : 'Stil analysieren'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
+        <div className="max-w-4xl mx-auto">
+          {!result ? (
+            <UnifiedInputPanel 
+              onSubmit={handleInputSubmit}
+              placeholder="Fügen Sie hier einen Beispieltext ein (mindestens 100 Zeichen)..."
+            />
+          ) : (
           <div className="animate-fade-in">
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <Card className="shadow-card">
@@ -219,6 +207,7 @@ const StyleAnalysis = () => {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );

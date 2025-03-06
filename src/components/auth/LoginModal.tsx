@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -11,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { AtSign, Lock, Github, Twitter } from 'lucide-react';
+import { AtSign, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface LoginModalProps {
@@ -38,17 +37,6 @@ const LoginModal = ({ open, onOpenChange, onSwitchToRegister }: LoginModalProps)
     // Simulate login
     setTimeout(() => {
       toast.success('Erfolgreich angemeldet');
-      setIsLoading(false);
-      onOpenChange(false);
-    }, 1500);
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    setIsLoading(true);
-    
-    // Simulate social login
-    setTimeout(() => {
-      toast.success(`Anmeldung über ${provider} erfolgreich`);
       setIsLoading(false);
       onOpenChange(false);
     }, 1500);
@@ -109,40 +97,6 @@ const LoginModal = ({ open, onOpenChange, onSwitchToRegister }: LoginModalProps)
             {isLoading ? 'Anmeldung läuft...' : 'Anmelden'}
           </Button>
         </form>
-        
-        <div className="relative my-2">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Oder weiter mit
-            </span>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mt-2">
-          <Button 
-            variant="outline" 
-            type="button" 
-            className="w-full" 
-            onClick={() => handleSocialLogin('Github')}
-            disabled={isLoading}
-          >
-            <Github className="mr-2 h-4 w-4" />
-            Github
-          </Button>
-          <Button 
-            variant="outline" 
-            type="button" 
-            className="w-full" 
-            onClick={() => handleSocialLogin('Twitter')}
-            disabled={isLoading}
-          >
-            <Twitter className="mr-2 h-4 w-4" />
-            Twitter
-          </Button>
-        </div>
         
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-center gap-2 pt-2 border-t border-border">
           <div className="text-sm text-center">

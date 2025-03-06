@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -296,23 +295,6 @@ const Navbar = () => {
             <DropdownMenuContent align="end" className="w-56 animate-fade-in bg-card dark:bg-[#1E1E1E]">
               <DropdownMenuLabel>Mein Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => handleNavigation('/profile')}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Profil</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleNavigation('/settings')}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Einstellungen</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={handleLogout}
                 className="text-destructive flex items-center gap-2 cursor-pointer"
@@ -345,39 +327,6 @@ const Navbar = () => {
                 {step.name}
               </Button>
             ))}
-            <div className="h-px w-full bg-border my-2"></div>
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/profile')}
-              className="justify-start w-full"
-            >
-              <User className="h-5 w-5 mr-2" />
-              Profil
-            </Button>
-            <Button 
-              variant="ghost"
-              onClick={() => handleNavigation('/settings')}
-              className="justify-start w-full"
-            >
-              <Settings className="h-5 w-5 mr-2" />
-              Einstellungen
-            </Button>
-            <div className="h-px w-full bg-border my-2"></div>
-            <Button 
-              variant="default"
-              onClick={openLoginModal}
-              className="justify-center w-full button-save"
-            >
-              <LogIn className="h-4 w-4 mr-1" />
-              Anmelden
-            </Button>
-            <Button 
-              className="justify-center w-full bg-gradient-to-r from-primary to-secondary text-white button-create shimmer"
-              onClick={openRegisterModal}
-            >
-              <UserPlus className="h-4 w-4 mr-1" />
-              Registrieren
-            </Button>
             <div className="h-px w-full bg-border my-2"></div>
             <Button 
               variant="ghost"

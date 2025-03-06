@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -391,4 +390,12 @@
 
 .text-status-completed {
   color: hsl(152, 60%, 40%);
+}
+
+.shadow-card {
+  @apply shadow-md hover:shadow-lg transition-shadow;
+}
+
+.card {
+  @apply bg-card dark:bg-[#1E1E1E] hover:dark:bg-[#252525] transition-colors;
 }

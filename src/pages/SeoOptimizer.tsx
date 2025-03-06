@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TrendingUp, CheckCircle, AlertCircle, Sparkles, MoveUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import Navbar from '@/components/layout/Navbar';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
 
 type SeoSuggestion = {
   id: string;
@@ -23,7 +23,6 @@ const SeoOptimizer = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<SeoSuggestion[]>([]);
 
-  // Mock suggestions
   const mockSuggestions: SeoSuggestion[] = [
     {
       id: '1',
@@ -62,12 +61,20 @@ const SeoOptimizer = () => {
     
     setIsAnalyzing(true);
     
-    // Simulate API call delay
     setTimeout(() => {
       setSeoScore(78);
       setSuggestions(mockSuggestions);
       setIsAnalyzing(false);
     }, 2000);
+  };
+
+  const handleInputSubmit = (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
+    if (data.type === 'text') {
+      setContent(data.content as string);
+      handleAnalyze();
+    } else {
+      toast.info('Diese Funktion wird bald verfügbar sein');
+    }
   };
 
   const getScoreColor = (score: number) => {
@@ -125,15 +132,10 @@ const SeoOptimizer = () => {
                     />
                   </div>
                   
-                  <div>
-                    <label className="text-sm font-medium mb-1 block">Inhalt</label>
-                    <Textarea 
-                      placeholder="Fügen Sie hier Ihren Inhalt ein..."
-                      className="min-h-[300px]"
-                      value={content}
-                      onChange={(e) => setContent(e.target.value)}
-                    />
-                  </div>
+                  <UnifiedInputPanel 
+                    onSubmit={handleInputSubmit}
+                    placeholder="Fügen Sie hier Ihren Inhalt ein..."
+                  />
                 </CardContent>
                 <CardFooter>
                   <Button 
