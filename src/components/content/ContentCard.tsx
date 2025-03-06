@@ -95,9 +95,20 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
     return 'text-status-completed';
   };
 
+  // Determine gradient variation based on progress
+  const getProgressGradient = (progress: number) => {
+    if (progress < 30) {
+      return 'from-primary to-primary-lighter';
+    } else if (progress < 70) {
+      return 'from-primary via-blue-400 to-secondary';
+    } else {
+      return 'from-blue-400 to-secondary';
+    }
+  };
+
   return (
-    <div className="bg-card rounded-lg border border-border shadow-card overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card/95 dark:backdrop-blur-sm">
-      <div className="p-4">
+    <div className="bg-card rounded-lg border border-border shadow-sm card-shadow overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card dark:backdrop-blur-sm">
+      <div className="p-4 dark:card-content">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
             <FileText 
@@ -119,13 +130,15 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
         
         <div className="mb-3">
           <div className="flex items-center">
-            <Progress 
-              value={progress} 
-              className={cn(
-                "h-2 bg-muted flex-1 mr-2",
-                getProgressColor(progress)
-              )}
-            />
+            <div className="h-2 bg-muted flex-1 mr-2 rounded-full overflow-hidden">
+              <div 
+                className={cn(
+                  "h-full shimmer bg-gradient-to-r transition-all duration-500",
+                  getProgressGradient(progress)
+                )}
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
             <span className={cn(
               "text-xs font-medium",
               getProgressColor(progress)
@@ -161,8 +174,8 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
           <div className="absolute h-0.5 bg-muted top-1 left-1 right-1 -z-10"></div>
           <div 
             className={cn(
-              "absolute h-0.5 top-1 left-1 -z-5 transition-all duration-500",
-              getProgressColor(progress)
+              "absolute h-0.5 top-1 left-1 -z-5 transition-all duration-500 shimmer bg-gradient-to-r",
+              getProgressGradient(progress)
             )}
             style={{ width: `${progress}%` }}
           ></div>
@@ -178,6 +191,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
             size="sm"
             onClick={() => navigate(`/edit/${type}/${id}`)}
             className={cn(
+              "transition-all duration-300",
               status === 'feedback' ? 'bg-status-feedback hover:bg-status-feedback/90' : ''
             )}
           >

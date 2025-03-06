@@ -42,13 +42,13 @@
   }
 
   .dark {
-    --background: 240 10% 3.9%; /* Dark background #18181B */
+    --background: 240 10% 7%; /* Dark background #121212 */
     --foreground: 0 0% 98%; /* Light text #F9FAFB */
     
-    --card: 240 10% 8%; /* Darker card background #1A1C23 */
-    --card-foreground: 0 0% 98%; /* Light card text */
+    --card: 240 10% 12%; /* Darker card background #1E1E1E */
+    --card-foreground: 0 0% 100%; /* White text on cards */
     
-    --popover: 240 10% 3.9%; /* Dark popover */
+    --popover: 240 10% 7%; /* Dark popover */
     --popover-foreground: 0 0% 98%; /* Light popover text */
     
     --primary: 242 76% 55%; /* Keep primary the same for brand consistency */
@@ -111,7 +111,7 @@
   
   /* Modern card styles */
   .card-modern {
-    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 dark:bg-gray-800/80 dark:hover:bg-gray-800;
+    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 dark:bg-[#1E1E1E] dark:hover:bg-[#252525];
     background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 1));
   }
   
@@ -223,6 +223,149 @@
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)));
   }
+
+  /* Tooltip animations */
+  .tooltip-slide-up {
+    animation: tooltip-slide-up 0.3s ease-out forwards;
+  }
+
+  /* Micro-interactions for buttons */
+  .button-press {
+    transform: scale(0.97);
+    transition: transform 0.2s ease-out;
+  }
+
+  .button-save:active {
+    @apply button-press;
+    box-shadow: 0 0 0 2px rgba(58, 54, 224, 0.4);
+  }
+
+  .button-create:active {
+    @apply button-press;
+    transform: translateY(-2px) scale(0.97);
+  }
+
+  .button-share:active {
+    transform: rotate(5deg) scale(0.97);
+  }
+
+  /* Gradient progress bar */
+  .progress-gradient {
+    background: linear-gradient(to right, hsl(var(--primary)), hsl(var(--secondary)));
+  }
+
+  /* Shimmer effect for progress bar */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-100%);
+    animation: shimmer 2s infinite;
+  }
+
+  .dark .shimmer::after {
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+}
+
+/* Animation keyframes */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes tooltip-slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+/* Dark mode enhancements for cards */
+.dark .bg-card {
+  @apply bg-[#1E1E1E]; /* Specific dark card background */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dark .card-hover:hover,
+.dark .bg-card:hover {
+  @apply bg-[#252525]; /* Lighter on hover */
+}
+
+.dark .card-content {
+  @apply px-6 py-5; /* Slightly increased padding in dark mode */
+}
+
+/* Adjust card shadows and hover effects */
+.card-shadow {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.dark .card-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.card-shadow:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.dark .card-shadow:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Tailwind doesn't generate these automatically, so we add them manually */
@@ -248,34 +391,4 @@
 
 .text-status-completed {
   color: hsl(152, 60%, 40%);
-}
-
-/* Animation extensions */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 3s ease-in-out infinite;
-}
-
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 }
