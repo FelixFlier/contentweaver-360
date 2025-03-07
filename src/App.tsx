@@ -14,6 +14,8 @@ import ContentList from "./pages/ContentList";
 import ResearchAgent from "./pages/ResearchAgent";
 import SeoOptimizer from "./pages/SeoOptimizer";
 import SourceManagement from "./pages/SourceManagement";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/research" element={<ResearchAgent />} />
             <Route path="/seo" element={<SeoOptimizer />} />
             <Route path="/resources/sources" element={<SourceManagement />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

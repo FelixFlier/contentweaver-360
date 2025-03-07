@@ -12,11 +12,11 @@ import {
   UserPlus,
   Settings,
   User,
-  LogOut,
-  PenLine,
   ChevronDown,
   Plus,
-  BarChart
+  BarChart,
+  HelpCircle,
+  PenLine
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 

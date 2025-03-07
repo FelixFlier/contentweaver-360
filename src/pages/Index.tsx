@@ -1,12 +1,13 @@
+
 import React, { useEffect } from 'react';
-import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight, Search, TrendingUp } from 'lucide-react';
+import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight, Search, TrendingUp, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import ContentCarousel from '@/components/content/ContentCarousel';
 import ActivityTimeline from '@/components/activity/ActivityTimeline';
 import Navbar from '@/components/layout/Navbar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
 import { useTutorial } from '@/hooks/use-tutorial';
 
@@ -156,20 +157,20 @@ const Index = () => {
               </span>
             </div>
             
-            <h1 className="text-3xl md:text-4xl font-bold mb-5 text-balance relative">
+            <h1 className="text-3xl md:text-4xl font-bold mb-5 text-balance relative improved-typography">
               <span className="text-gradient">Willkommen zum KI-gestützten Blog-Autor</span>
               <div className="absolute -top-6 -right-12 w-16 h-16 bg-primary/5 rounded-full blur-2xl -z-10"></div>
               <div className="absolute -bottom-4 -left-8 w-20 h-20 bg-secondary/5 rounded-full blur-3xl -z-10"></div>
             </h1>
             
-            <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg mb-10 max-w-2xl mx-auto improved-typography">
               Erstellen Sie hochwertige Inhalte mit KI-Unterstützung und optimieren Sie Ihren Content-Workflow
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button 
                 size="lg" 
-                className="w-full sm:w-auto button-glow bg-gradient-to-r from-primary to-primary/90"
+                className="w-full sm:w-auto button-glow bg-gradient-to-r from-primary to-primary/90 hover-lift"
                 onClick={() => navigate('/create/blog')}
               >
                 <BookOpen className="mr-2 h-5 w-5" />
@@ -179,7 +180,7 @@ const Index = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="w-full sm:w-auto border-2"
+                className="w-full sm:w-auto border-2 hover-lift"
                 onClick={() => navigate('/create/linkedin')}
               >
                 <FileText className="mr-2 h-5 w-5" />
@@ -189,7 +190,7 @@ const Index = () => {
           </div>
           
           <div className="w-full mb-12 animate-slide-in">
-            <div className="bg-card rounded-xl shadow-sm border border-border p-6">
+            <div className="bg-card rounded-xl shadow-sm border border-border p-6 hover-lift">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Meine Inhalte</h2>
                 <Button 
@@ -212,7 +213,7 @@ const Index = () => {
           </div>
           
           <div className="w-full max-w-2xl mx-auto mb-12 animate-slide-in">
-            <Card>
+            <Card className="hover-lift">
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-4">Aktivitäten</h2>
                 <ActivityTimeline activities={recentActivities} />
@@ -225,19 +226,31 @@ const Index = () => {
           {featureCards.map((card, index) => (
             <div 
               key={index} 
-              className="card-modern p-6 hover:shadow-lg transition-all duration-300 cursor-pointer dark:bg-card dark:border dark:border-border"
+              className="card-modern p-6 hover:shadow-lg transition-all duration-300 cursor-pointer dark:bg-card dark:border dark:border-border hover-lift relative glassmorphism-enhanced"
               onClick={() => navigate(card.path)}
             >
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="absolute top-2 right-2 opacity-60 hover:opacity-100 z-10"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  navigate('/');
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
               <div className={`mb-4 bg-${card.color}/10 w-12 h-12 flex items-center justify-center rounded-full`}>
                 {card.icon}
               </div>
-              <h3 className="text-xl font-semibold mb-3">{card.title}</h3>
-              <p className="text-muted-foreground mb-5">
+              <h3 className="text-xl font-semibold mb-3 improved-typography">{card.title}</h3>
+              <p className="text-muted-foreground mb-5 improved-typography">
                 {card.description}
               </p>
               <Button 
                 variant="ghost" 
-                className={`text-${card.color} flex items-center gap-2`}
+                className={`text-${card.color} flex items-center gap-2 custom-cursor`}
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(card.path);

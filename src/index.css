@@ -324,8 +324,10 @@
 }
 
 /* Dark mode enhancements for cards */
-.dark .bg-card {
-  background-color: #1E1E1E !important; /* Force dark background */
+.dark .card-modern,
+.dark .bg-card,
+.dark .card {
+  background-color: hsl(var(--card)) !important; /* Force dark background */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -338,79 +340,143 @@
   @apply px-6 py-5; /* Slightly increased padding in dark mode */
 }
 
-/* Adjust card shadows and hover effects */
-.card-shadow {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.dark .card-shadow {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-}
-
-.card-shadow:hover {
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-.dark .card-shadow:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-}
-
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Tailwind doesn't generate these automatically, so we add them manually */
-.bg-status-inprogress {
-  background-color: hsl(217, 91%, 60%);
-}
-
-.bg-status-feedback {
-  background-color: hsl(38, 92%, 50%);
-}
-
-.bg-status-completed {
-  background-color: hsl(152, 60%, 40%);
-}
-
-.text-status-inprogress {
-  color: hsl(217, 91%, 60%);
-}
-
-.text-status-feedback {
-  color: hsl(38, 92%, 50%);
-}
-
-.text-status-completed {
-  color: hsl(152, 60%, 40%);
-}
-
-.shadow-card {
-  @apply shadow-md hover:shadow-lg transition-shadow;
-}
-
-.card {
-  @apply bg-card text-card-foreground dark:bg-[#1E1E1E] dark:text-foreground;
-}
-
 /* Mobile view specific dark mode fixes */
 @media (max-width: 768px) {
-  .dark .bg-card {
-    background-color: #1E1E1E !important;
-  }
-  
+  .dark .card-modern,
+  .dark .bg-card,
   .dark .card {
-    background-color: #1E1E1E !important;
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground));
   }
   
   .dark .bg-background {
-    background-color: hsl(240, 10%, 7%) !important;
+    background-color: hsl(var(--background)) !important;
   }
 }
+
+/* Custom cursor for interactive elements */
+.custom-cursor {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="%233a36e0" fill-opacity="0.4" stroke="%233a36e0" stroke-width="1"/></svg>') 8 8, auto;
+}
+
+/* Enhanced micro-interactions */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced glassmorphism effect */
+.glassmorphism-enhanced {
+  @apply backdrop-blur-md border border-white/20 shadow-lg;
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.02)
+  );
+}
+
+.dark .glassmorphism-enhanced {
+  background-color: rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0.04),
+    rgba(0, 0, 0, 0.2)
+  );
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Loading state animations */
+.loading-skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: hsl(var(--muted));
+  border-radius: var(--radius);
+}
+
+.loading-skeleton::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.dark .loading-skeleton::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+}
+
+@keyframes skeleton-loading {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Better typography with improved readability */
+.improved-typography {
+  letter-spacing: -0.011em;
+  line-height: 1.6;
+}
+
+.improved-typography h1,
+.improved-typography h2,
+.improved-typography h3 {
+  letter-spacing: -0.022em;
+  font-weight: 600;
+}
+
+.improved-typography p {
+  max-width: 70ch;
+}
+
+/* Consistent spacing utility */
+.space-y-consistent > * + * {
+  margin-top: var(--space, 1rem);
+}
+
+/* Enhanced dropdown animations */
+.dropdown-animation-enter {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.dropdown-animation-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.dropdown-animation-exit {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.dropdown-animation-exit-active {
+  transform: translateY(-10px);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+

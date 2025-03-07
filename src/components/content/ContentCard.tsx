@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileText, Clock, MessageSquare, Check, Play, ArrowRight } from 'lucide-react';
+import { FileText, Clock, MessageSquare, Check, Play, ArrowRight, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -107,7 +107,19 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm card-shadow overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-[#1E1E1E]">
+    <div className="bg-card rounded-lg border border-border shadow-sm card-shadow overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card hover-lift relative">
+      <Button 
+        variant="ghost" 
+        size="icon"
+        className="absolute top-2 right-2 opacity-60 hover:opacity-100 z-10"
+        onClick={(e) => {
+          e.stopPropagation(); 
+          navigate('/');
+        }}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+
       <div className="p-4 dark:card-content">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -191,7 +203,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
             size="sm"
             onClick={() => navigate(`/edit/${type}/${id}`)}
             className={cn(
-              "transition-all duration-300",
+              "transition-all duration-300 hover-lift",
               status === 'feedback' ? 'bg-status-feedback hover:bg-status-feedback/90' : ''
             )}
           >
