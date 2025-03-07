@@ -91,23 +91,23 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
     if (status === 'completed') return 'text-status-completed';
     if (progress < 25) return 'text-red-500';
     if (progress < 50) return 'text-status-feedback';
-    if (progress < 75) return 'text-blue-400';
+    if (progress < 75) return 'text-secondary';
     return 'text-status-completed';
   };
 
   // Determine gradient variation based on progress
   const getProgressGradient = (progress: number) => {
     if (progress < 30) {
-      return 'from-primary to-primary-lighter';
+      return 'from-primary/80 to-primary';
     } else if (progress < 70) {
-      return 'from-primary via-blue-400 to-secondary';
+      return 'from-primary via-secondary to-accent';
     } else {
-      return 'from-blue-400 to-secondary';
+      return 'from-secondary to-accent';
     }
   };
 
   return (
-    <div className="bg-card rounded-lg border border-border shadow-sm card-shadow overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card hover-lift relative">
+    <div className="bg-card rounded-lg border border-border shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg group dark:border-border/30 dark:bg-card hover-lift relative">
       <Button 
         variant="ghost" 
         size="icon"
@@ -120,7 +120,7 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
         <X className="h-4 w-4" />
       </Button>
 
-      <div className="p-4 dark:card-content">
+      <div className="p-4">
         <div className="flex items-start justify-between mb-2">
           <div className="flex items-center gap-2">
             <FileText 
@@ -204,7 +204,9 @@ const ContentCard = ({ id, title, type, status, progress, lastUpdated }: Content
             onClick={() => navigate(`/edit/${type}/${id}`)}
             className={cn(
               "transition-all duration-300 hover-lift",
-              status === 'feedback' ? 'bg-status-feedback hover:bg-status-feedback/90' : ''
+              status === 'feedback' 
+                ? 'bg-status-feedback hover:bg-status-feedback/90' 
+                : 'bg-gradient-primary hover:opacity-90'
             )}
           >
             {status === 'feedback' ? (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -42,7 +41,7 @@ const NAV_STEPS = [
   { 
     name: 'Start', 
     path: '/', 
-    icon: <Sparkles className="h-4 w-4 mr-2" />,
+    icon: <Sparkles className="h-4 w-4 mr-2" style={{ color: 'hsl(var(--primary))' }} />,
     description: 'Übersicht und Dashboard',
     dropdownItems: [
       { label: 'Letzte Aktivitäten', icon: <FileText className="h-4 w-4" />, path: '/recent-activities' },
@@ -52,12 +51,12 @@ const NAV_STEPS = [
   },
   { 
     name: 'Inhalte', 
-    path: '/content', 
-    icon: <Folder className="h-4 w-4 mr-2" />,
+    path: '/all-contents', 
+    icon: <Folder className="h-4 w-4 mr-2" style={{ color: 'hsl(var(--accent))' }} />,
     description: 'Ihre erstellten Inhalte',
     dropdownItems: [
-      { label: 'Alle Inhalte', icon: <Folder className="h-4 w-4" />, path: '/content' },
-      { label: 'Blogs', icon: <FileText className="h-4 w-4" />, path: '/blogs' },
+      { label: 'Alle Inhalte', icon: <Folder className="h-4 w-4" />, path: '/all-contents' },
+      { label: 'Blogs', icon: <FileText className="h-4 w-4" />, path: '/content' },
       { label: 'LinkedIn Posts', icon: <FileText className="h-4 w-4" />, path: '/linkedin-posts' },
       { label: 'Entwürfe', icon: <PenLine className="h-4 w-4" />, path: '/drafts' }
     ]
@@ -65,7 +64,7 @@ const NAV_STEPS = [
   { 
     name: 'Blog', 
     path: '/create/blog', 
-    icon: <FileText className="h-4 w-4 mr-2" />,
+    icon: <FileText className="h-4 w-4 mr-2" style={{ color: 'hsl(var(--secondary))' }} />,
     description: 'Blog-Artikel erstellen',
     dropdownItems: [
       { label: 'Neuer Blog', icon: <Plus className="h-4 w-4" />, path: '/create/blog' },
@@ -237,7 +236,7 @@ const Navbar = () => {
           className="flex items-center gap-2 cursor-pointer mr-4"
         >
           <Sparkles className="h-6 w-6 text-primary" />
-          <span className="font-semibold hidden sm:inline-block">ContentWeaver</span>
+          <span className="font-semibold hidden sm:inline-block text-gradient">ContentWeaver</span>
         </div>
 
         <div className={`${isMobile ? 'hidden' : 'flex'} flex-grow items-center justify-center gap-2 overflow-x-auto`}>
@@ -254,8 +253,8 @@ const Navbar = () => {
                     onClick={() => handleNavigation(step.path)}
                     className={`transition-all duration-300 ${
                       isActive(step.path) 
-                        ? "text-primary-foreground bg-primary relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-primary-foreground" 
-                        : "text-foreground/80 hover:text-foreground hover:bg-accent"
+                        ? "bg-gradient-primary text-primary-foreground relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-white/50" 
+                        : "text-foreground/80 hover:text-foreground hover:bg-accent/10"
                     }`}
                   >
                     {step.icon}
@@ -272,7 +271,7 @@ const Navbar = () => {
                         <DropdownMenuItem 
                           key={index}
                           onClick={() => handleNavigation(item.path)}
-                          className="hover:bg-accent gap-2 cursor-pointer"
+                          className="hover:bg-accent/10 gap-2 cursor-pointer"
                         >
                           {item.icon}
                           <span>{item.label}</span>
@@ -295,7 +294,7 @@ const Navbar = () => {
                 variant="outline" 
                 size="sm"
                 onClick={openLoginModal}
-                className="button-save"
+                className="border-primary/20 text-primary hover:text-primary hover:bg-primary/10"
               >
                 <LogIn className="h-4 w-4 mr-1" />
                 Anmelden
@@ -304,7 +303,7 @@ const Navbar = () => {
               <Button 
                 size="sm"
                 onClick={openRegisterModal}
-                className="bg-gradient-to-r from-primary to-secondary text-white button-create shimmer"
+                className="bg-gradient-primary text-white shimmer"
               >
                 <UserPlus className="h-4 w-4 mr-1" />
                 Registrieren
@@ -315,16 +314,16 @@ const Navbar = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 border-2 border-primary/30">
                   {user ? (
                     <>
                       <AvatarImage src="/placeholder.svg" alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarFallback className="bg-gradient-primary text-white">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                     </>
                   ) : (
                     <>
                       <AvatarImage src="/placeholder.svg" alt="User" />
-                      <AvatarFallback>U</AvatarFallback>
+                      <AvatarFallback className="bg-gradient-primary text-white">U</AvatarFallback>
                     </>
                   )}
                 </Avatar>
@@ -335,15 +334,15 @@ const Navbar = () => {
                 <>
                   <DropdownMenuLabel>Mein Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
+                  <DropdownMenuItem className="flex items-center gap-2 text-foreground">
+                    <User className="h-4 w-4 text-primary" />
                     <span>{user?.name}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => handleNavigation('/profile')}
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer text-foreground"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Settings className="h-4 w-4 text-secondary" />
                     <span>Einstellungen</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -359,16 +358,16 @@ const Navbar = () => {
                 <>
                   <DropdownMenuItem 
                     onClick={openLoginModal}
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer text-foreground"
                   >
-                    <LogIn className="h-4 w-4" />
+                    <LogIn className="h-4 w-4 text-primary" />
                     <span>Anmelden</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={openRegisterModal}
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer text-foreground"
                   >
-                    <UserPlus className="h-4 w-4" />
+                    <UserPlus className="h-4 w-4 text-secondary" />
                     <span>Registrieren</span>
                   </DropdownMenuItem>
                 </>
@@ -392,7 +391,7 @@ const Navbar = () => {
                 key={step.path}
                 variant={isActive(step.path) ? "default" : "ghost"}
                 onClick={() => handleNavigation(step.path)}
-                className="justify-start w-full"
+                className={`justify-start w-full ${isActive(step.path) ? "bg-gradient-primary text-white" : ""}`}
               >
                 {React.cloneElement(step.icon, { className: "h-5 w-5 mr-2" })}
                 {step.name}
@@ -404,7 +403,7 @@ const Navbar = () => {
                 <div className="h-px w-full bg-border my-2"></div>
                 <Button 
                   variant="ghost"
-                  className="justify-start w-full"
+                  className="justify-start w-full text-primary"
                   onClick={openLoginModal}
                 >
                   <LogIn className="h-5 w-5 mr-2" />
@@ -412,7 +411,7 @@ const Navbar = () => {
                 </Button>
                 <Button 
                   variant="ghost"
-                  className="justify-start w-full"
+                  className="justify-start w-full text-secondary"
                   onClick={openRegisterModal}
                 >
                   <UserPlus className="h-5 w-5 mr-2" />
@@ -426,7 +425,7 @@ const Navbar = () => {
                   variant="ghost"
                   className="justify-start w-full"
                 >
-                  <User className="h-5 w-5 mr-2" />
+                  <User className="h-5 w-5 mr-2 text-primary" />
                   {user?.name}
                 </Button>
                 <Button 
@@ -434,7 +433,7 @@ const Navbar = () => {
                   className="justify-start w-full"
                   onClick={() => handleNavigation('/profile')}
                 >
-                  <Settings className="h-5 w-5 mr-2" />
+                  <Settings className="h-5 w-5 mr-2 text-secondary" />
                   Einstellungen
                 </Button>
                 <Button 
@@ -453,13 +452,23 @@ const Navbar = () => {
 
       {isMobile && (
         <div className="fixed bottom-4 right-4 z-50">
-          <Button 
-            variant="default" 
-            className="rounded-full h-12 w-12 shadow-lg button-glow"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-          >
-            {mobileMenuOpen ? "×" : "≡"}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="default" 
+              size="icon"
+              className="rounded-full h-12 w-12 shadow-lg button-glow bg-accent text-white"
+              onClick={() => setShowTutorial(true)}
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="default" 
+              className="rounded-full h-12 w-12 shadow-lg button-glow bg-gradient-primary"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            >
+              {mobileMenuOpen ? "×" : "≡"}
+            </Button>
+          </div>
         </div>
       )}
 

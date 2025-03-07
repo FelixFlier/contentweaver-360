@@ -11,6 +11,7 @@ import CreateBlog from "./pages/CreateBlog";
 import EditBlog from "./pages/EditBlog";
 import StyleAnalysis from "./pages/StyleAnalysis";
 import ContentList from "./pages/ContentList";
+import AllContentsPage from "./pages/AllContentsPage";
 import ResearchAgent from "./pages/ResearchAgent";
 import SeoOptimizer from "./pages/SeoOptimizer";
 import SourceManagement from "./pages/SourceManagement";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/edit/linkedin/:id" element={<EditBlog />} />
             <Route path="/analysis" element={<StyleAnalysis />} />
             <Route path="/content" element={<ContentList />} />
+            <Route path="/all-contents" element={<AllContentsPage />} />
             <Route path="/research" element={<ResearchAgent />} />
             <Route path="/seo" element={<SeoOptimizer />} />
             <Route path="/resources/sources" element={<SourceManagement />} />

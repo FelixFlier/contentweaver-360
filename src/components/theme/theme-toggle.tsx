@@ -11,22 +11,24 @@ export function ThemeToggle({ showHelpIcon = true }: { showHelpIcon?: boolean })
 
   return (
     <div className="flex items-center gap-2">
-      {/* Always show the help icon, regardless of mobile or desktop */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowTutorial(true)}
-          >
-            <HelpCircle className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
-            <span className="sr-only">Open tutorial</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Tutorial öffnen</p>
-        </TooltipContent>
-      </Tooltip>
+      {showHelpIcon && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowTutorial(true)}
+              className="text-accent hover:text-accent hover:bg-accent/10"
+            >
+              <HelpCircle className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+              <span className="sr-only">Open tutorial</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Tutorial öffnen</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
 
       <Tooltip>
         <TooltipTrigger asChild>
@@ -34,6 +36,7 @@ export function ThemeToggle({ showHelpIcon = true }: { showHelpIcon?: boolean })
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            className="text-primary hover:text-primary hover:bg-primary/10"
           >
             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

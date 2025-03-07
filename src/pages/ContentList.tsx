@@ -9,7 +9,8 @@ import {
   List as ListIcon,
   FileText,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  ArrowRight
 } from 'lucide-react';
 import { 
   Select, 
@@ -116,7 +117,7 @@ const ContentList = () => {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="mb-6"
+          className="mb-6 text-primary hover:text-primary/80 hover:bg-primary/10"
           onClick={() => navigate('/')}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -124,14 +125,14 @@ const ContentList = () => {
         </Button>
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-bold">Meine Inhalte</h1>
+          <h1 className="text-2xl font-bold text-gradient">Meine Inhalte</h1>
           
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => navigate('/analysis')}
-              className="hidden md:flex"
+              className="hidden md:flex border-primary/20 text-primary hover:text-primary hover:bg-primary/10"
             >
               <Sparkles className="h-4 w-4 mr-2" />
               Stilanalyse
@@ -140,6 +141,7 @@ const ContentList = () => {
             <Button 
               variant="outline" 
               onClick={() => navigate('/create/linkedin')}
+              className="border-secondary/20 text-secondary hover:text-secondary hover:bg-secondary/10"
             >
               <Plus className="h-4 w-4 mr-1" />
               LinkedIn-Post
@@ -147,6 +149,7 @@ const ContentList = () => {
             
             <Button 
               onClick={() => navigate('/create/blog')}
+              className="bg-gradient-primary text-white hover:opacity-90"
             >
               <Plus className="h-4 w-4 mr-1" />
               Blog-Artikel
@@ -162,6 +165,18 @@ const ContentList = () => {
         </Tabs>
         
         <TabsContent value="contents" className="animate-fade-in">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-medium">Neueste Inhalte</h2>
+            <Button 
+              variant="link" 
+              onClick={() => navigate('/all-contents')}
+              className="text-primary flex items-center"
+            >
+              Alle anzeigen
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+          
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
               <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
