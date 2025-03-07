@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -32,19 +33,38 @@ const LoginModal = ({ open, onOpenChange, onSwitchToRegister }: LoginModalProps)
       return;
     }
     
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+      return;
+    }
+    
+    // Basic password validation (minimum 6 characters)
+    if (password.length < 6) {
+      toast.error('Das Passwort muss mindestens 6 Zeichen lang sein');
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate login
+    // Simulating login functionality - would connect to an actual auth service in production
     setTimeout(() => {
+      // Store user session in localStorage
+      const user = { email, id: 'user-' + Date.now(), name: email.split('@')[0] };
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('isLoggedIn', 'true');
+      
       toast.success('Erfolgreich angemeldet');
       setIsLoading(false);
       onOpenChange(false);
+      window.location.reload(); // Reload to update UI with logged in state
     }, 1500);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] animate-fade-in">
+      <DialogContent className="sm:max-w-[425px] animate-fade-in bg-card dark:bg-[#1E1E1E]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Anmelden</DialogTitle>
           <DialogDescription className="text-center">

@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { AtSign, User, Lock, ArrowRight, Github, Twitter } from 'lucide-react';
+import { AtSign, User, Lock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface RegisterModalProps {
@@ -34,6 +34,14 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
         toast.error('Bitte füllen Sie alle Felder aus');
         return;
       }
+      
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+        return;
+      }
+      
       setStep(2);
     }
   };
@@ -51,13 +59,26 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
       return;
     }
     
+    // Basic password validation (minimum 6 characters)
+    if (password.length < 6) {
+      toast.error('Das Passwort muss mindestens 6 Zeichen lang sein');
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate registration
+    // Simulating registration - would connect to an actual auth service in production
     setTimeout(() => {
+      // Store user data in localStorage
+      const user = { email, name, id: 'user-' + Date.now() };
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('isLoggedIn', 'true');
+      
       toast.success('Registrierung erfolgreich');
       setIsLoading(false);
       onOpenChange(false);
+      window.location.reload(); // Reload to update UI with logged in state
+      
       // Reset form
       setStep(1);
       setName('');
@@ -67,20 +88,9 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
     }, 1500);
   };
 
-  const handleSocialRegister = (provider: string) => {
-    setIsLoading(true);
-    
-    // Simulate social registration
-    setTimeout(() => {
-      toast.success(`Registrierung über ${provider} erfolgreich`);
-      setIsLoading(false);
-      onOpenChange(false);
-    }, 1500);
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] animate-fade-in">
+      <DialogContent className="sm:max-w-[425px] animate-fade-in bg-card dark:bg-[#1E1E1E]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">Registrieren</DialogTitle>
           <DialogDescription className="text-center">
@@ -93,7 +103,7 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
             <span className="w-full border-t border-border"></span>
           </div>
           <div className="relative flex justify-center text-xs">
-            <div className="flex items-center space-x-6 bg-background px-4">
+            <div className="flex items-center space-x-6 bg-background px-4 dark:bg-[#1E1E1E]">
               <div 
                 className={`flex flex-col items-center ${step >= 1 ? 'text-primary' : 'text-muted-foreground'}`}
               >
@@ -209,44 +219,6 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
             </>
           )}
         </form>
-        
-        {step === 1 && (
-          <>
-            <div className="relative my-2">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Oder registrieren mit
-                </span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4 mt-2">
-              <Button 
-                variant="outline" 
-                type="button" 
-                className="w-full" 
-                onClick={() => handleSocialRegister('Github')}
-                disabled={isLoading}
-              >
-                <Github className="mr-2 h-4 w-4" />
-                Github
-              </Button>
-              <Button 
-                variant="outline" 
-                type="button" 
-                className="w-full" 
-                onClick={() => handleSocialRegister('Twitter')}
-                disabled={isLoading}
-              >
-                <Twitter className="mr-2 h-4 w-4" />
-                Twitter
-              </Button>
-            </div>
-          </>
-        )}
         
         <DialogFooter className="flex flex-col sm:flex-row sm:justify-center gap-2 pt-2 border-t border-border">
           <div className="text-sm text-center">

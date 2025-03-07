@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   FileText, 
@@ -128,6 +128,12 @@ const NAV_STEPS = [
   },
 ];
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 const NavTooltip = ({ children, content, description }: { children: React.ReactNode, content: string, description: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [longHover, setLongHover] = useState(false);
@@ -171,9 +177,28 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  useEffect(() => {
+    const checkUserSession = () => {
+      const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const userData = localStorage.getItem('user');
+      
+      setIsLoggedIn(loggedIn);
+      if (loggedIn && userData) {
+        setUser(JSON.parse(userData));
+      }
+    };
+    
+    checkUserSession();
+    
+    window.addEventListener('storage', checkUserSession);
+    return () => window.removeEventListener('storage', checkUserSession);
+  }, []);
   
   const handleNavigation = (path: string) => {
     setMobileMenuOpen(false);
@@ -195,6 +220,10 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setUser(null);
     toast.success('Erfolgreich abgemeldet');
   };
 
@@ -258,55 +287,90 @@ const Navbar = () => {
         <div className="flex items-center ml-auto gap-2">
           <ThemeToggle showHelpIcon={!isMobile} />
           
-          {isMobile && (
-            <ThemeToggle showHelpIcon={true} />
+          {!isMobile && !isLoggedIn && (
+            <div className="flex items-center gap-2 ml-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={openLoginModal}
+                className="button-save"
+              >
+                <LogIn className="h-4 w-4 mr-1" />
+                Anmelden
+              </Button>
+              
+              <Button 
+                size="sm"
+                onClick={openRegisterModal}
+                className="bg-gradient-to-r from-primary to-secondary text-white button-create shimmer"
+              >
+                <UserPlus className="h-4 w-4 mr-1" />
+                Registrieren
+              </Button>
+            </div>
           )}
-          
-          <div className="hidden sm:flex items-center gap-2 ml-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={openLoginModal}
-              className="button-save"
-            >
-              <LogIn className="h-4 w-4 mr-1" />
-              Anmelden
-            </Button>
-            
-            <Button 
-              size="sm"
-              onClick={openRegisterModal}
-              className="bg-gradient-to-r from-primary to-secondary text-white button-create shimmer"
-            >
-              <UserPlus className="h-4 w-4 mr-1" />
-              Registrieren
-            </Button>
-          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg" alt="User" />
-                  <AvatarFallback>U</AvatarFallback>
+                  {user ? (
+                    <>
+                      <AvatarImage src="/placeholder.svg" alt={user.name} />
+                      <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </>
+                  ) : (
+                    <>
+                      <AvatarImage src="/placeholder.svg" alt="User" />
+                      <AvatarFallback>U</AvatarFallback>
+                    </>
+                  )}
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 animate-fade-in bg-card dark:bg-[#1E1E1E]">
-              <DropdownMenuItem 
-                onClick={openLoginModal}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <LogIn className="h-4 w-4" />
-                <span>Anmelden</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={openRegisterModal}
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                <UserPlus className="h-4 w-4" />
-                <span>Registrieren</span>
-              </DropdownMenuItem>
+              {isLoggedIn ? (
+                <>
+                  <DropdownMenuLabel>Mein Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{user?.name}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleNavigation('/profile')}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Einstellungen</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="text-destructive flex items-center gap-2 cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Abmelden</span>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem 
+                    onClick={openLoginModal}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    <span>Anmelden</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={openRegisterModal}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Registrieren</span>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -314,7 +378,7 @@ const Navbar = () => {
 
       {isMobile && (
         <div 
-          className={`fixed inset-0 top-16 z-40 bg-background transition-opacity duration-300 ${
+          className={`fixed inset-0 top-16 z-40 bg-background dark:bg-[#121212] transition-opacity duration-300 ${
             mobileMenuOpen 
               ? 'opacity-100 pointer-events-auto' 
               : 'opacity-0 pointer-events-none'
@@ -332,15 +396,55 @@ const Navbar = () => {
                 {step.name}
               </Button>
             ))}
-            <div className="h-px w-full bg-border my-2"></div>
-            <Button 
-              variant="ghost"
-              className="justify-start w-full text-destructive"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Abmelden
-            </Button>
+            
+            {!isLoggedIn ? (
+              <>
+                <div className="h-px w-full bg-border my-2"></div>
+                <Button 
+                  variant="ghost"
+                  className="justify-start w-full"
+                  onClick={openLoginModal}
+                >
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Anmelden
+                </Button>
+                <Button 
+                  variant="ghost"
+                  className="justify-start w-full"
+                  onClick={openRegisterModal}
+                >
+                  <UserPlus className="h-5 w-5 mr-2" />
+                  Registrieren
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="h-px w-full bg-border my-2"></div>
+                <Button 
+                  variant="ghost"
+                  className="justify-start w-full"
+                >
+                  <User className="h-5 w-5 mr-2" />
+                  {user?.name}
+                </Button>
+                <Button 
+                  variant="ghost"
+                  className="justify-start w-full"
+                  onClick={() => handleNavigation('/profile')}
+                >
+                  <Settings className="h-5 w-5 mr-2" />
+                  Einstellungen
+                </Button>
+                <Button 
+                  variant="ghost"
+                  className="justify-start w-full text-destructive"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-5 w-5 mr-2" />
+                  Abmelden
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

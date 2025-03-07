@@ -325,13 +325,13 @@
 
 /* Dark mode enhancements for cards */
 .dark .bg-card {
-  @apply bg-[#1E1E1E]; /* Specific dark card background */
+  background-color: #1E1E1E !important; /* Force dark background */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .dark .card-hover:hover,
 .dark .bg-card:hover {
-  @apply bg-[#252525]; /* Lighter on hover */
+  background-color: #252525 !important; /* Lighter on hover */
 }
 
 .dark .card-content {
@@ -397,5 +397,20 @@
 }
 
 .card {
-  @apply bg-card dark:bg-[#1E1E1E] hover:dark:bg-[#252525] transition-colors;
+  @apply bg-card text-card-foreground dark:bg-[#1E1E1E] dark:text-foreground;
+}
+
+/* Mobile view specific dark mode fixes */
+@media (max-width: 768px) {
+  .dark .bg-card {
+    background-color: #1E1E1E !important;
+  }
+  
+  .dark .card {
+    background-color: #1E1E1E !important;
+  }
+  
+  .dark .bg-background {
+    background-color: hsl(240, 10%, 7%) !important;
+  }
 }
