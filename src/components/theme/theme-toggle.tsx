@@ -10,7 +10,7 @@ export function ThemeToggle({ showHelpIcon = true }: { showHelpIcon?: boolean })
   const { setShowTutorial } = useTutorial()
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       {showHelpIcon && (
         <Tooltip>
           <TooltipTrigger asChild>

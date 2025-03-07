@@ -36,6 +36,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import LoginModal from '@/components/auth/LoginModal';
 import RegisterModal from '@/components/auth/RegisterModal';
 import { toast } from 'sonner';
+import { useTutorial } from '@/hooks/use-tutorial';
 
 const NAV_STEPS = [
   { 
@@ -183,6 +184,7 @@ const Navbar = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { setShowTutorial } = useTutorial();
   
   useEffect(() => {
     const checkUserSession = () => {
