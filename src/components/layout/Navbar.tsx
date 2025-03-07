@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
@@ -16,7 +17,8 @@ import {
   Plus,
   BarChart,
   HelpCircle,
-  PenLine
+  PenLine,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
