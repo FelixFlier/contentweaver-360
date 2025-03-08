@@ -27,7 +27,14 @@ import Navbar from '@/components/layout/Navbar';
 import StepIndicator from '@/components/workflow/StepIndicator';
 import { getContentById, updateContent } from '@/services/contentService';
 import { useAuth } from '@/contexts/AuthContext';
-import { uploadFile, getContentFiles, getFileUrl, deleteFile, FileRecord } from '@/services/fileService';
+import { 
+  uploadFile, 
+  getContentFiles, 
+  getFileUrl, 
+  deleteFile, 
+  FileRecord,
+  subscribeToFiles 
+} from '@/services/fileService';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -118,6 +125,34 @@ const EditBlog = () => {
     };
     
     fetchContent();
+    
+    let unsubscribe: () => void;
+    if (id) {
+      unsubscribe = subscribeToFiles(id, (payload) => {
+        console.log('Realtime file update:', payload);
+        const { eventType, new: newRecord, old: oldRecord } = payload;
+        
+        switch (eventType) {
+          case 'INSERT':
+            setFiles(prev => [...prev, newRecord as FileRecord]);
+            break;
+          case 'UPDATE':
+            setFiles(prev => prev.map(file => 
+              file.id === newRecord.id ? (newRecord as FileRecord) : file
+            ));
+            break;
+          case 'DELETE':
+            if (oldRecord) {
+              setFiles(prev => prev.filter(file => file.id !== oldRecord.id));
+            }
+            break;
+        }
+      });
+    }
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user, id, navigate]);
 
   const handleSave = async () => {
@@ -200,6 +235,10 @@ const EditBlog = () => {
         setFiles(prev => prev.filter(f => f.id !== file.id));
       }
     }
+  };
+
+  const handleOpenFile = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   if (!user) {
@@ -428,7 +467,7 @@ const EditBlog = () => {
                                           {file.type} • {(file.size / 1024).toFixed(1)} KB
                                         </p>
                                         <Button 
-                                          onClick={() => window.open(getFileUrl(file.path), '_blank', 'noopener,noreferrer')}
+                                          onClick={() => handleOpenFile(getFileUrl(file.path))}
                                         >
                                           Datei öffnen
                                         </Button>

@@ -4,10 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Folder, ArrowRight, Loader2 } from 'lucide-react';
 import ContentCard from '@/components/content/ContentCard';
 import { Button } from '@/components/ui/button';
-import { getUserContents } from '@/services/contentService';
+import { getUserContents, subscribeToContents, Content } from '@/services/contentService';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/layout/Navbar';
-import { Content } from '@/services/contentService';
 
 const ContentList = () => {
   const navigate = useNavigate();
@@ -26,6 +25,48 @@ const ContentList = () => {
     };
     
     fetchContents();
+    
+    // Realtime-Abonnement für Inhaltsänderungen
+    const unsubscribe = subscribeToContents((payload) => {
+      console.log('Realtime update:', payload);
+      const { eventType, new: newRecord, old: oldRecord } = payload;
+      
+      // Nur Daten des eingeloggten Benutzers aktualisieren
+      if (user && newRecord && newRecord.user_id === user.id) {
+        switch (eventType) {
+          case 'INSERT':
+            setContents(prev => [
+              {
+                ...newRecord,
+                type: newRecord.type as 'blog' | 'linkedin',
+                status: newRecord.status as 'draft' | 'published'
+              } as Content, 
+              ...prev
+            ]);
+            break;
+          case 'UPDATE':
+            setContents(prev => prev.map(item => 
+              item.id === newRecord.id 
+                ? { 
+                    ...newRecord, 
+                    type: newRecord.type as 'blog' | 'linkedin',
+                    status: newRecord.status as 'draft' | 'published'
+                  } as Content
+                : item
+            ));
+            break;
+          case 'DELETE':
+            if (oldRecord) {
+              setContents(prev => prev.filter(item => item.id !== oldRecord.id));
+            }
+            break;
+        }
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, [user]);
 
   // Map contents to ContentCardProps
@@ -33,7 +74,7 @@ const ContentList = () => {
     return contents.map(content => ({
       id: content.id,
       title: content.title,
-      type: content.type as 'blog' | 'linkedin',
+      type: content.type,
       status: content.status === 'published' ? 'completed' as const : 'inprogress' as const,
       progress: content.status === 'published' ? 100 : 50, // Simplified example
       lastUpdated: new Date(content.updated_at).toLocaleDateString('de-DE')

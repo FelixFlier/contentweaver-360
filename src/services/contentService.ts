@@ -29,6 +29,27 @@ export interface ContentUpdateInput {
   status?: 'draft' | 'published';
 }
 
+// Aktiviert Supabase-Channel für Realtime-Updates
+export const subscribeToContents = (callback: (payload: any) => void) => {
+  const channel = supabase
+    .channel('content-changes')
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'contents' 
+      }, 
+      (payload) => {
+        callback(payload);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+};
+
 // Get all contents for authenticated user
 export const getUserContents = async (): Promise<Content[]> => {
   try {
@@ -41,14 +62,21 @@ export const getUserContents = async (): Promise<Content[]> => {
     const { data, error } = await supabase
       .from('contents')
       .select('*')
+      .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
     if (error) {
       throw new Error(error.message);
     }
 
-    // Cast to ensure the type is correct
-    return (data || []) as Content[];
+    // Typsichere Konvertierung der Daten
+    const typedData = (data || []).map(item => ({
+      ...item,
+      type: item.type as 'blog' | 'linkedin',
+      status: item.status as 'draft' | 'published'
+    }));
+
+    return typedData as Content[];
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden der Inhalte');
     console.error('Error fetching contents:', error);
@@ -69,8 +97,14 @@ export const getContentById = async (id: string): Promise<Content | null> => {
       throw new Error(error.message);
     }
 
-    // Cast to ensure the type is correct
-    return data as Content;
+    // Typsichere Konvertierung
+    const typedData = {
+      ...data,
+      type: data.type as 'blog' | 'linkedin',
+      status: data.status as 'draft' | 'published'
+    };
+
+    return typedData as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden des Inhalts');
     console.error('Error fetching content by id:', error);
@@ -100,8 +134,15 @@ export const createContent = async (input: ContentCreateInput): Promise<Content 
       throw new Error(error.message);
     }
 
+    // Typsichere Konvertierung
+    const typedData = {
+      ...data,
+      type: data.type as 'blog' | 'linkedin',
+      status: data.status as 'draft' | 'published'
+    };
+
     toast.success('Inhalt erfolgreich erstellt');
-    return data as Content;
+    return typedData as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Erstellen des Inhalts');
     console.error('Error creating content:', error);
@@ -123,8 +164,15 @@ export const updateContent = async (id: string, input: ContentUpdateInput): Prom
       throw new Error(error.message);
     }
 
+    // Typsichere Konvertierung
+    const typedData = {
+      ...data,
+      type: data.type as 'blog' | 'linkedin',
+      status: data.status as 'draft' | 'published'
+    };
+
     toast.success('Inhalt erfolgreich aktualisiert');
-    return data as Content;
+    return typedData as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Aktualisieren des Inhalts');
     console.error('Error updating content:', error);

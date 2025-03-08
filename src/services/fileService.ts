@@ -10,12 +10,35 @@ export interface FileRecord {
   path: string;
   content_id?: string | null;
   created_at: string;
+  user_id: string;
 }
 
 export interface FileInput {
   file: File;
   content_id?: string | null;
 }
+
+// Aktiviert Supabase-Channel für Realtime-Updates von Dateien
+export const subscribeToFiles = (contentId: string, callback: (payload: any) => void) => {
+  const channel = supabase
+    .channel('file-changes')
+    .on('postgres_changes', 
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'files',
+        filter: `content_id=eq.${contentId}` 
+      }, 
+      (payload) => {
+        callback(payload);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+};
 
 // Upload a file
 export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileRecord | null> => {
