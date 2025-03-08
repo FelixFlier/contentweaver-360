@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -33,8 +32,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Label } from '@/components/ui/label';
 
-// Blog workflow steps with icons - using the existing ones
 const blogWorkflowSteps = [
   { id: 'style-analysis', label: 'Stilanalyse', description: 'Analyse und Anpassung des Schreibstils' },
   { id: 'research', label: 'Recherche', description: 'Sammlung und Bewertung von Quellen' },
@@ -46,7 +45,6 @@ const blogWorkflowSteps = [
   { id: 'social', label: 'Social Media', description: 'Vorbereitung für Social Media' },
 ];
 
-// LinkedIn workflow steps with icons - using the existing ones
 const linkedinWorkflowSteps = [
   { id: 'style-analysis', label: 'Stilanalyse', description: 'Analyse und Anpassung des Schreibstils' },
   { id: 'planning', label: 'Planung', description: 'Gliederung und Strukturierung des Inhalts' },
@@ -55,7 +53,6 @@ const linkedinWorkflowSteps = [
   { id: 'publishing', label: 'Veröffentlichung', description: 'Vorbereitung zur Veröffentlichung' },
 ];
 
-// Map workflow steps to icons - using the existing function
 const getStepIcon = (stepId: string) => {
   switch (stepId) {
     case 'style-analysis':
@@ -109,7 +106,6 @@ const EditBlog = () => {
           setContent(contentData);
           setContentText(contentData.content || '');
           
-          // Fetch associated files
           const contentFiles = await getContentFiles(id);
           setFiles(contentFiles);
         } else {
@@ -157,7 +153,6 @@ const EditBlog = () => {
         setFeedback('');
         setIsSubmittingFeedback(false);
         
-        // Update the content status
         updateContent(content.id, {
           status: 'published'
         }).then(updated => {
@@ -175,7 +170,6 @@ const EditBlog = () => {
     if (e.target.files && e.target.files[0] && content) {
       const file = e.target.files[0];
       
-      // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Datei zu groß (Maximalgröße: 5MB)");
         return;
@@ -194,7 +188,6 @@ const EditBlog = () => {
       
       setIsUploadingFile(false);
       
-      // Clear the input
       e.target.value = '';
     }
   };
@@ -329,7 +322,7 @@ const EditBlog = () => {
           <TabsContent value="editor" className="animate-fade-in">
             <div className="bg-card border border-border rounded-lg shadow-sm card-shadow p-4 md:p-6 dark:bg-card">
               <div className="flex items-center mb-4 gap-2 text-muted-foreground">
-                <div className="p-2 bg-primary/10 rounded-full dark:bg-primary/5">
+                <div className="p-2 bg-primary/10 rounded-full">
                   {getStepIcon(content.status === 'published' ? 'social' : 'writing')}
                 </div>
                 <div>
@@ -435,10 +428,7 @@ const EditBlog = () => {
                                           {file.type} • {(file.size / 1024).toFixed(1)} KB
                                         </p>
                                         <Button 
-                                          as="a" 
-                                          href={getFileUrl(file.path)} 
-                                          target="_blank" 
-                                          rel="noopener noreferrer"
+                                          onClick={() => window.open(getFileUrl(file.path), '_blank', 'noopener,noreferrer')}
                                         >
                                           Datei öffnen
                                         </Button>

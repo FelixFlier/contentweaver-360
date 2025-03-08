@@ -32,6 +32,12 @@ export interface ContentUpdateInput {
 // Get all contents for authenticated user
 export const getUserContents = async (): Promise<Content[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Nicht angemeldet');
+    }
+    
     const { data, error } = await supabase
       .from('contents')
       .select('*')
@@ -41,7 +47,8 @@ export const getUserContents = async (): Promise<Content[]> => {
       throw new Error(error.message);
     }
 
-    return data || [];
+    // Cast to ensure the type is correct
+    return (data || []) as Content[];
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden der Inhalte');
     console.error('Error fetching contents:', error);
@@ -62,7 +69,8 @@ export const getContentById = async (id: string): Promise<Content | null> => {
       throw new Error(error.message);
     }
 
-    return data;
+    // Cast to ensure the type is correct
+    return data as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden des Inhalts');
     console.error('Error fetching content by id:', error);
@@ -73,9 +81,18 @@ export const getContentById = async (id: string): Promise<Content | null> => {
 // Create a new content
 export const createContent = async (input: ContentCreateInput): Promise<Content | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Nicht angemeldet');
+    }
+    
     const { data, error } = await supabase
       .from('contents')
-      .insert([input])
+      .insert([{
+        ...input,
+        user_id: user.id
+      }])
       .select()
       .single();
 
@@ -84,7 +101,7 @@ export const createContent = async (input: ContentCreateInput): Promise<Content 
     }
 
     toast.success('Inhalt erfolgreich erstellt');
-    return data;
+    return data as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Erstellen des Inhalts');
     console.error('Error creating content:', error);
@@ -107,7 +124,7 @@ export const updateContent = async (id: string, input: ContentUpdateInput): Prom
     }
 
     toast.success('Inhalt erfolgreich aktualisiert');
-    return data;
+    return data as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Aktualisieren des Inhalts');
     console.error('Error updating content:', error);

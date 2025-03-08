@@ -20,6 +20,12 @@ export interface FileInput {
 // Upload a file
 export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileRecord | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('Nicht angemeldet');
+    }
+    
     const fileExt = file.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `${content_id ? `content/${content_id}` : 'general'}/${fileName}`;
@@ -47,7 +53,8 @@ export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileR
           size: file.size,
           type: file.type,
           path: filePath,
-          content_id: content_id || null
+          content_id: content_id || null,
+          user_id: user.id
         }
       ])
       .select('*')
