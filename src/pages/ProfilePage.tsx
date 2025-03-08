@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { ArrowLeft, User, Mail, Lock, Calendar, MapPin, Edit, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, User, Mail, Lock, Calendar, MapPin, Edit, Save, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,43 +11,91 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/layout/Navbar';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { getUserProfile, updateUserProfile, uploadAvatar } from '@/services/profileService';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = React.useState(false);
+  const { user, signOut } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
   
-  // Get user data from localStorage
-  const userDataString = localStorage.getItem('user');
-  const userData = userDataString ? JSON.parse(userDataString) : null;
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  
-  const [formData, setFormData] = React.useState({
-    name: userData?.name || '',
-    email: userData?.email || '',
-    bio: 'Content Creator & Marketing Specialist',
-    location: 'Berlin, Deutschland',
-    joined: 'Januar 2023'
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    bio: '',
+    location: '',
   });
+  
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user) {
+        setIsLoading(true);
+        const userProfile = await getUserProfile();
+        setIsLoading(false);
+        
+        if (userProfile) {
+          setProfile(userProfile);
+          setFormData({
+            name: userProfile.name || '',
+            email: userProfile.email || '',
+            bio: userProfile.bio || '',
+            location: userProfile.location || '',
+          });
+        }
+      }
+    };
+    
+    loadProfile();
+  }, [user]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSave = () => {
-    if (userData) {
-      const updatedUserData = { ...userData, name: formData.name, email: formData.email };
-      localStorage.setItem('user', JSON.stringify(updatedUserData));
-      toast({
-        title: "Profil aktualisiert",
-        description: "Ihre Profiländerungen wurden gespeichert.",
-      });
+  const handleSave = async () => {
+    setIsLoading(true);
+    const updated = await updateUserProfile(formData);
+    setIsLoading(false);
+    
+    if (updated) {
+      setProfile(updated);
+      setIsEditing(false);
     }
-    setIsEditing(false);
   };
   
-  if (!isLoggedIn) {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "Datei zu groß",
+          description: "Die maximale Dateigröße beträgt 5 MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setIsLoading(true);
+      const avatarUrl = await uploadAvatar(file);
+      
+      if (avatarUrl) {
+        setProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
+      }
+      
+      setIsLoading(false);
+    }
+  };
+  
+  const handleLogout = async () => {
+    await signOut();
+  };
+  
+  if (!user) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -88,28 +136,49 @@ const ProfilePage = () => {
             <Card className="hover-lift">
               <CardContent className="pt-6 pb-6">
                 <div className="flex flex-col items-center">
-                  <Avatar className="h-24 w-24 mb-4">
-                    <AvatarImage src="/placeholder.svg" alt={userData?.name} />
-                    <AvatarFallback className="text-3xl">
-                      {userData?.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative mb-4">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} alt={profile?.name || user.email} />
+                      <AvatarFallback className="text-3xl">
+                        {profile?.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {isEditing && (
+                      <div className="absolute bottom-0 right-0">
+                        <Label htmlFor="avatar-upload" className="cursor-pointer">
+                          <div className="bg-primary text-white p-1.5 rounded-full">
+                            <Image className="h-4 w-4" />
+                          </div>
+                          <Input 
+                            type="file" 
+                            id="avatar-upload" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={handleAvatarChange}
+                          />
+                        </Label>
+                      </div>
+                    )}
+                  </div>
                   
-                  <h2 className="text-xl font-semibold">{userData?.name}</h2>
-                  <p className="text-muted-foreground text-sm mb-4">{formData.bio}</p>
+                  <h2 className="text-xl font-semibold">{profile?.name || user.email}</h2>
+                  <p className="text-muted-foreground text-sm mb-4">{profile?.bio || 'Kein Profil-Bio vorhanden'}</p>
                   
                   <div className="w-full space-y-3 mt-4">
                     <div className="flex items-center text-sm">
                       <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{userData?.email}</span>
+                      <span>{profile?.email || user.email}</span>
                     </div>
                     <div className="flex items-center text-sm">
                       <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{formData.location}</span>
+                      <span>{profile?.location || 'Keine Ortsangabe'}</span>
                     </div>
                     <div className="flex items-center text-sm">
                       <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>Mitglied seit {formData.joined}</span>
+                      <span>Mitglied seit {profile?.joined_date 
+                        ? new Date(profile.joined_date).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }) 
+                        : 'Unbekannt'}</span>
                     </div>
                   </div>
                   
@@ -117,6 +186,7 @@ const ProfilePage = () => {
                     variant="outline" 
                     className="mt-6 w-full" 
                     onClick={() => setIsEditing(!isEditing)}
+                    disabled={isLoading}
                   >
                     {isEditing ? (
                       <>
@@ -160,7 +230,7 @@ const ProfilePage = () => {
                         placeholder="Ihr Name" 
                         value={formData.name}
                         onChange={handleChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     
@@ -173,7 +243,7 @@ const ProfilePage = () => {
                         placeholder="ihre-email@beispiel.de" 
                         value={formData.email}
                         onChange={handleChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                     
@@ -185,18 +255,36 @@ const ProfilePage = () => {
                         placeholder="Erzählen Sie etwas über sich" 
                         value={formData.bio}
                         onChange={handleChange}
-                        disabled={!isEditing}
+                        disabled={!isEditing || isLoading}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="location">Standort</Label>
+                      <Input 
+                        id="location" 
+                        name="location"
+                        placeholder="Ihr Standort" 
+                        value={formData.location}
+                        onChange={handleChange}
+                        disabled={!isEditing || isLoading}
                       />
                     </div>
                   </CardContent>
                   <CardFooter>
                     <Button 
                       onClick={handleSave} 
-                      disabled={!isEditing}
+                      disabled={!isEditing || isLoading}
                       className="ml-auto"
                     >
-                      <Save className="h-4 w-4 mr-2" />
-                      Speichern
+                      {isLoading ? (
+                        <>Wird gespeichert...</>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Speichern
+                        </>
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -238,11 +326,18 @@ const ProfilePage = () => {
                       </Button>
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="flex justify-between">
+                    <Button 
+                      variant="destructive"
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                    >
+                      Abmelden
+                    </Button>
+                    
                     <Button 
                       onClick={handleSave} 
-                      disabled={!isEditing}
-                      className="ml-auto"
+                      disabled={!isEditing || isLoading}
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Speichern

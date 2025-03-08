@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CreateBlog from "./pages/CreateBlog";
@@ -27,22 +28,24 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/create/blog" element={<CreateBlog />} />
-            <Route path="/create/linkedin" element={<CreateBlog />} />
-            <Route path="/edit/blog/:id" element={<EditBlog />} />
-            <Route path="/edit/linkedin/:id" element={<EditBlog />} />
-            <Route path="/analysis" element={<StyleAnalysis />} />
-            <Route path="/content" element={<ContentList />} />
-            <Route path="/all-contents" element={<AllContentsPage />} />
-            <Route path="/research" element={<ResearchAgent />} />
-            <Route path="/seo" element={<SeoOptimizer />} />
-            <Route path="/resources/sources" element={<SourceManagement />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/create/blog" element={<CreateBlog />} />
+              <Route path="/create/linkedin" element={<CreateBlog />} />
+              <Route path="/edit/blog/:id" element={<EditBlog />} />
+              <Route path="/edit/linkedin/:id" element={<EditBlog />} />
+              <Route path="/analysis" element={<StyleAnalysis />} />
+              <Route path="/content" element={<ContentList />} />
+              <Route path="/all-contents" element={<AllContentsPage />} />
+              <Route path="/research" element={<ResearchAgent />} />
+              <Route path="/seo" element={<SeoOptimizer />} />
+              <Route path="/resources/sources" element={<SourceManagement />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

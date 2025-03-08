@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -7,7 +7,8 @@ import {
   Send, 
   Book, 
   CheckCircle,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,8 @@ import Navbar from '@/components/layout/Navbar';
 import StepIndicator from '@/components/workflow/StepIndicator';
 import { Card, CardContent } from '@/components/ui/card';
 import StyleSelector from '@/components/style/StyleSelector';
+import { createContent } from '@/services/contentService';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Blog workflow steps
 const blogWorkflowSteps = [
@@ -44,6 +47,7 @@ type ContentType = 'blog' | 'linkedin';
 
 const CreateBlog = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const contentType: ContentType = window.location.pathname.includes('linkedin') ? 'linkedin' : 'blog';
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -52,7 +56,15 @@ const CreateBlog = () => {
   
   const workflowSteps = contentType === 'blog' ? blogWorkflowSteps : linkedinWorkflowSteps;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Redirect to login if not authenticated
+    if (!user && localStorage.getItem('isLoggedIn') !== 'true') {
+      toast.error('Sie müssen angemeldet sein, um Inhalte zu erstellen');
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -62,13 +74,33 @@ const CreateBlog = () => {
     
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      toast.success(`${contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} erstellt`);
+    const content = await createContent({
+      title,
+      description,
+      type: contentType,
+      styleId
+    });
+    
+    setIsSubmitting(false);
+    
+    if (content) {
       navigate('/content');
-      setIsSubmitting(false);
-    }, 1500);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container px-4 pt-24 pb-16 mx-auto flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 text-primary mx-auto animate-spin mb-4" />
+            <p>Überprüfe Anmeldestatus...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -162,8 +194,17 @@ const CreateBlog = () => {
               className="relative overflow-hidden group min-w-40"
             >
               <span className="relative z-10 flex items-center">
-                {isSubmitting ? "Wird erstellt..." : "Erstellen"}
-                {!isSubmitting && <Send className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wird erstellt...
+                  </>
+                ) : (
+                  <>
+                    Erstellen
+                    <Send className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
               </span>
               <span className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity"></span>
             </Button>

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { AtSign, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginModalProps {
   open: boolean;
@@ -23,9 +24,9 @@ interface LoginModalProps {
 const LoginModal = ({ open, onOpenChange, onSwitchToRegister }: LoginModalProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, isLoading } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -46,20 +47,10 @@ const LoginModal = ({ open, onOpenChange, onSwitchToRegister }: LoginModalProps)
       return;
     }
     
-    setIsLoading(true);
-    
-    // Simulating login functionality - would connect to an actual auth service in production
-    setTimeout(() => {
-      // Store user session in localStorage
-      const user = { email, id: 'user-' + Date.now(), name: email.split('@')[0] };
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast.success('Erfolgreich angemeldet');
-      setIsLoading(false);
+    await signIn(email, password);
+    if (!isLoading) {
       onOpenChange(false);
-      window.location.reload(); // Reload to update UI with logged in state
-    }, 1500);
+    }
   };
 
   return (

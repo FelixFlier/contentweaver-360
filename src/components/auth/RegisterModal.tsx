@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Dialog, 
@@ -13,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { AtSign, User, Lock, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RegisterModalProps {
   open: boolean;
@@ -26,7 +26,7 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, isLoading } = useAuth();
 
   const handleNextStep = () => {
     if (step === 1) {
@@ -46,7 +46,7 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!password || !confirmPassword) {
@@ -65,27 +65,17 @@ const RegisterModal = ({ open, onOpenChange, onSwitchToLogin }: RegisterModalPro
       return;
     }
     
-    setIsLoading(true);
+    await signUp(email, password, name);
     
-    // Simulating registration - would connect to an actual auth service in production
-    setTimeout(() => {
-      // Store user data in localStorage
-      const user = { email, name, id: 'user-' + Date.now() };
-      localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast.success('Registrierung erfolgreich');
-      setIsLoading(false);
-      onOpenChange(false);
-      window.location.reload(); // Reload to update UI with logged in state
-      
+    if (!isLoading) {
       // Reset form
       setStep(1);
       setName('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-    }, 1500);
+      onOpenChange(false);
+    }
   };
 
   return (
