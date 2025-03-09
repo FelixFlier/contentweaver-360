@@ -1,5 +1,5 @@
 
-import { Moon, Sun, HelpCircle } from "lucide-react"
+import { Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "@/components/theme/theme-provider"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -20,7 +20,6 @@ export function ThemeToggle({ showHelpIcon = true }: { showHelpIcon?: boolean })
               onClick={() => setShowTutorial(true)}
               className="text-accent hover:text-accent hover:bg-accent/10"
             >
-              <HelpCircle className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
               <span className="sr-only">Open tutorial</span>
             </Button>
           </TooltipTrigger>

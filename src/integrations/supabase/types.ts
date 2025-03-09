@@ -51,12 +51,19 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "agent_tasks_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_stages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agent_tasks_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       contents: {
@@ -105,21 +112,15 @@ export type Database = {
       }
       document_tags: {
         Row: {
-          created_at: string | null
           document_id: string
-          id: string
           tag: string
         }
         Insert: {
-          created_at?: string | null
           document_id: string
-          id?: string
           tag: string
         }
         Update: {
-          created_at?: string | null
           document_id?: string
-          id?: string
           tag?: string
         }
         Relationships: [
@@ -127,53 +128,9 @@ export type Database = {
             foreignKeyName: "document_tags_document_id_fkey"
             columns: ["document_id"]
             isOneToOne: false
-            referencedRelation: "documents"
+            referencedRelation: "files"
             referencedColumns: ["id"]
-          }
-        ]
-      }
-      documents: {
-        Row: {
-          content: string | null
-          created_at: string | null
-          doc_type: string
-          file_path: string
-          id: string
-          metadata: Json | null
-          name: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          content?: string | null
-          created_at?: string | null
-          doc_type: string
-          file_path: string
-          id?: string
-          metadata?: Json | null
-          name: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          content?: string | null
-          created_at?: string | null
-          doc_type?: string
-          file_path?: string
-          id?: string
-          metadata?: Json | null
-          name?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "documents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
+          },
         ]
       }
       files: {
@@ -260,26 +217,23 @@ export type Database = {
       source_structured_content: {
         Row: {
           content_summary: string | null
-          created_at: string | null
           heading: string | null
           id: string
-          order: number | null
+          order: number
           source_id: string
         }
         Insert: {
           content_summary?: string | null
-          created_at?: string | null
           heading?: string | null
           id?: string
-          order?: number | null
+          order?: number
           source_id: string
         }
         Update: {
           content_summary?: string | null
-          created_at?: string | null
           heading?: string | null
           id?: string
-          order?: number | null
+          order?: number
           source_id?: string
         }
         Relationships: [
@@ -289,12 +243,11 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sources"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       source_tables: {
         Row: {
-          created_at: string | null
           headers: Json | null
           id: string
           rows: Json | null
@@ -302,7 +255,6 @@ export type Database = {
           table_id: string
         }
         Insert: {
-          created_at?: string | null
           headers?: Json | null
           id?: string
           rows?: Json | null
@@ -310,7 +262,6 @@ export type Database = {
           table_id: string
         }
         Update: {
-          created_at?: string | null
           headers?: Json | null
           id?: string
           rows?: Json | null
@@ -324,7 +275,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sources"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       sources: {
@@ -336,12 +287,11 @@ export type Database = {
           domain: string | null
           id: string
           metadata: Json | null
-          quality: string | null
+          quality: string
           source_type: string
-          title: string
-          updated_at: string | null
+          title: string | null
           url: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           author?: string | null
@@ -351,12 +301,11 @@ export type Database = {
           domain?: string | null
           id?: string
           metadata?: Json | null
-          quality?: string | null
+          quality?: string
           source_type: string
-          title: string
-          updated_at?: string | null
+          title?: string | null
           url?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           author?: string | null
@@ -366,12 +315,11 @@ export type Database = {
           domain?: string | null
           id?: string
           metadata?: Json | null
-          quality?: string | null
+          quality?: string
           source_type?: string
-          title?: string
-          updated_at?: string | null
+          title?: string | null
           url?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -380,7 +328,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       workflow_stages: {
@@ -427,7 +375,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workflows"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       workflows: {
@@ -465,7 +413,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
@@ -483,3 +431,100 @@ export type Database = {
     }
   }
 }
+
+type PublicSchema = Database[Extract<keyof Database, "public">]
+
+export type Tables<
+  PublicTableNameOrOptions extends
+    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+        Database[PublicTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
+      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
+        PublicSchema["Views"])
+    ? (PublicSchema["Tables"] &
+        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  PublicTableNameOrOptions extends
+    | keyof PublicSchema["Tables"]
+    | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = PublicTableNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
+    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  PublicEnumNameOrOptions extends
+    | keyof PublicSchema["Enums"]
+    | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = PublicEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
+    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema["CompositeTypes"]
+    | { schema: keyof Database },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
+  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
+    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
