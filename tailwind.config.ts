@@ -63,7 +63,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Status colors
+				// Status colors with more modern shades
 				"status-inprogress": "#3B82F6",
 				"status-feedback": "#F59E0B",
 				"status-completed": "#10B981",
@@ -100,6 +100,14 @@ export default {
 				'slide-out': {
 					from: { transform: 'translateY(0)', opacity: '1' },
 					to: { transform: 'translateY(10px)', opacity: '0' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'pulse-gentle': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' }
 				}
 			},
 			animation: {
@@ -108,11 +116,15 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out forwards',
 				'fade-out': 'fade-out 0.3s ease-out forwards',
 				'slide-in': 'slide-in 0.4s ease-out forwards',
-				'slide-out': 'slide-out 0.4s ease-out forwards'
+				'slide-out': 'slide-out 0.4s ease-out forwards',
+				'float': 'float 3s ease-in-out infinite',
+				'pulse-gentle': 'pulse-gentle 3s ease-in-out infinite'
 			},
 			boxShadow: {
-				'navbar': '0px 2px 8px rgba(0, 0, 0, 0.06)',
-				'card': '0px 2px 6px rgba(0, 0, 0, 0.04)',
+				'navbar': '0 4px 20px rgba(0, 0, 0, 0.04)',
+				'card': '0 2px 10px rgba(0, 0, 0, 0.04)',
+				'card-hover': '0 5px 15px rgba(0, 0, 0, 0.08)',
+				'button': '0 2px 5px rgba(0, 0, 0, 0.1)',
 			}
 		}
 	},

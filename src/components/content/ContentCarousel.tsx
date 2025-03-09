@@ -1,10 +1,11 @@
 
 import React, { useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ContentCard, { ContentCardProps } from '@/components/content/ContentCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface ContentCarouselProps {
   title: string;
@@ -61,12 +62,15 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
   return (
     <div className="w-full">
       {!isMobile && items.length > 0 && (
-        <div className="flex items-center justify-end mb-5 gap-2">
+        <div className="flex items-center justify-end mb-4 gap-2">
           <div className="flex items-center gap-1">
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-9 w-9 rounded-full bg-background dark:bg-background/20"
+              className={cn(
+                "h-9 w-9 rounded-full bg-background dark:bg-background/20 transition-all duration-200",
+                items.length <= 3 && "opacity-50"
+              )}
               onClick={() => scroll('left')}
               disabled={items.length <= 3}
             >
@@ -75,7 +79,10 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-9 w-9 rounded-full bg-background dark:bg-background/20"
+              className={cn(
+                "h-9 w-9 rounded-full bg-background dark:bg-background/20 transition-all duration-200",
+                items.length <= 3 && "opacity-50"
+              )}
               onClick={() => scroll('right')}
               disabled={items.length <= 3}
             >
@@ -88,7 +95,7 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
       {items.length > 0 ? (
         <div 
           ref={carouselRef}
-          className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x scroll-smooth"
+          className="flex overflow-x-auto gap-6 pb-6 scrollbar-none snap-x scroll-smooth"
           style={{
             scrollbarWidth: 'none', // Firefox
             msOverflowStyle: 'none' // IE/Edge
@@ -104,9 +111,13 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
           ))}
         </div>
       ) : (
-        <div className="bg-white/50 dark:bg-[#1E1E1E]/50 rounded-lg border border-border/40 p-8 text-center shadow-sm">
+        <div className="glassmorphism-card p-8 text-center">
           <p className="text-muted-foreground mb-5">Keine Inhalte vorhanden</p>
-          <Button onClick={() => navigate('/create/blog')} className="bg-primary hover:bg-primary/90">
+          <Button 
+            onClick={() => navigate('/create/blog')} 
+            className="button-primary flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
             Ersten Inhalt erstellen
           </Button>
         </div>
