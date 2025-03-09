@@ -60,49 +60,35 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        
-        {!isMobile && items.length > 0 && (
-          <div className="flex items-center gap-2">
-            {seeAllLink && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate(seeAllLink)}
-              >
-                Alle anzeigen
-              </Button>
-            )}
-            
-            <div className="flex items-center gap-1">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 rounded-full"
-                onClick={() => scroll('left')}
-                disabled={items.length <= 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8 rounded-full"
-                onClick={() => scroll('right')}
-                disabled={items.length <= 1}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+      {!isMobile && items.length > 0 && (
+        <div className="flex items-center justify-end mb-5 gap-2">
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9 rounded-full bg-background dark:bg-background/20"
+              onClick={() => scroll('left')}
+              disabled={items.length <= 3}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9 rounded-full bg-background dark:bg-background/20"
+              onClick={() => scroll('right')}
+              disabled={items.length <= 3}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       
       {items.length > 0 ? (
         <div 
           ref={carouselRef}
-          className="flex overflow-x-auto gap-4 pb-4 scrollbar-none snap-x scroll-smooth"
+          className="flex overflow-x-auto gap-6 pb-4 scrollbar-none snap-x scroll-smooth"
           style={{
             scrollbarWidth: 'none', // Firefox
             msOverflowStyle: 'none' // IE/Edge
@@ -111,16 +97,16 @@ const ContentCarousel = ({ title, items, seeAllLink }: ContentCarouselProps) => 
           {sortedItems.map((item) => (
             <div 
               key={item.id} 
-              className="min-w-[300px] sm:min-w-[320px] flex-shrink-0 snap-start"
+              className="min-w-[300px] sm:min-w-[360px] flex-shrink-0 snap-start"
             >
               <ContentCard {...item} />
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-muted rounded-lg border border-border p-6 text-center">
-          <p className="text-muted-foreground mb-3">Keine Inhalte vorhanden</p>
-          <Button onClick={() => navigate('/create/blog')}>
+        <div className="bg-white/50 dark:bg-[#1E1E1E]/50 rounded-lg border border-border/40 p-8 text-center shadow-sm">
+          <p className="text-muted-foreground mb-5">Keine Inhalte vorhanden</p>
+          <Button onClick={() => navigate('/create/blog')} className="bg-primary hover:bg-primary/90">
             Ersten Inhalt erstellen
           </Button>
         </div>

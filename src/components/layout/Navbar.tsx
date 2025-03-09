@@ -10,7 +10,8 @@ import {
   Settings,
   User,
   LogOut,
-  Sparkles
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -28,7 +29,9 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import LoginModal from '@/components/auth/LoginModal';
 import RegisterModal from '@/components/auth/RegisterModal';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
+// Wir behalten alle Items, entfernen aber SEO, Research und Stilanalyse
 const NAV_ITEMS = [
   { 
     name: 'Start', 
@@ -143,6 +146,23 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center ml-auto gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/help')}
+                className="text-primary hover:text-primary hover:bg-primary/10"
+              >
+                <HelpCircle className="h-5 w-5" />
+                <span className="sr-only">Hilfe</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Hilfe & Anleitungen</p>
+            </TooltipContent>
+          </Tooltip>
+          
           <ThemeToggle showHelpIcon={false} />
           
           {!isMobile && !isLoggedIn && (

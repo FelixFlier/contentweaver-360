@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight } from 'lucide-react';
+import { FileText, Sparkles, BookOpen, Lightbulb, ChevronRight, Search, LineChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import ContentCarousel from '@/components/content/ContentCarousel';
@@ -99,8 +99,26 @@ const featureCards = [
   {
     title: 'Quellenmanagement',
     description: 'Verwalten Sie Ihre Quellen und Referenzen effizient, um die Glaubwürdigkeit Ihrer Inhalte zu erhöhen.',
-    icon: <Lightbulb className="h-6 w-6 text-secondary" />,
+    icon: <Lightbulb className="h-6 w-6 text-accent" />,
     path: '/resources/sources',
+  },
+  {
+    title: 'Stilanalyse',
+    description: 'Analysieren Sie den Stil Ihrer Inhalte und erhalten Sie Vorschläge zur Verbesserung.',
+    icon: <LineChart className="h-6 w-6 text-purple-500" />,
+    path: '/analysis',
+  },
+  {
+    title: 'Recherche-Assistent',
+    description: 'Lassen Sie den KI-Assistenten Recherchen zu Ihren Themen durchführen.',
+    icon: <Search className="h-6 w-6 text-orange-500" />,
+    path: '/research',
+  },
+  {
+    title: 'SEO-Optimierung',
+    description: 'Optimieren Sie Ihre Inhalte für Suchmaschinen und erhöhen Sie Ihre Sichtbarkeit.',
+    icon: <Sparkles className="h-6 w-6 text-emerald-500" />,
+    path: '/seo',
   }
 ];
 
@@ -125,7 +143,7 @@ const Index = () => {
         <section className="mb-10 animate-fade-in">
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h1 className="text-3xl md:text-4xl font-bold mb-5 text-balance">
-              <span className="text-primary">Willkommen zum KI-gestützten Blog-Autor</span>
+              <span className="text-gradient">Willkommen zum KI-gestützten Blog-Autor</span>
             </h1>
             
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
@@ -155,12 +173,12 @@ const Index = () => {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-          <div className="col-span-1 lg:col-span-2">
-            <Card className="shadow-sm h-full">
+        <div className="grid grid-cols-1 gap-8 mb-12">
+          <div className="w-full">
+            <Card className="shadow-sm bg-card glassmorphism-enhanced">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Meine Inhalte</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold text-foreground">Meine Inhalte</h2>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -181,21 +199,21 @@ const Index = () => {
             </Card>
           </div>
           
-          <div className="col-span-1">
-            <Card className="shadow-sm h-full">
+          <div className="w-full">
+            <Card className="shadow-sm bg-card glassmorphism-enhanced">
               <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Aktivitäten</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-foreground">Aktivitäten</h2>
                 <ActivityTimeline activities={recentActivities.slice(0, 4)} />
               </CardContent>
             </Card>
           </div>
         </div>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {featureCards.map((card, index) => (
             <Card 
               key={index} 
-              className="p-6 hover:shadow-md transition-all duration-300 cursor-pointer"
+              className="p-6 hover-lift glassmorphism-enhanced cursor-pointer"
               onClick={() => navigate(card.path)}
             >
               <div className="mb-4 bg-primary/10 w-12 h-12 flex items-center justify-center rounded-full">
