@@ -1,7 +1,10 @@
+// src/services/apiService.ts - Vollständige Datei
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 // Base API URL - adjust to your actual backend URL
+// Für Production/Vercel: const API_BASE = '/api/v1';
 const API_BASE = 'http://localhost:8000/api/v1';
 
 interface ApiOptions {
@@ -33,6 +36,9 @@ export const fetchAPI = async (endpoint: string, options: ApiOptions = {}) => {
     // Add auth token if available
     if (session?.access_token) {
       requestHeaders['Authorization'] = `Bearer ${session.access_token}`;
+    } else {
+      // ENTWICKLUNGSMODUS: Mock-Token für einfachere Tests
+      requestHeaders['Authorization'] = `Bearer mock_token_for_development`;
     }
 
     // Add content type for non-FormData requests
@@ -116,6 +122,19 @@ export const API = {
       }
     },
     
+    update: async (id: string, data: any) => {
+      try {
+        return await fetchAPI(`/workflows/${id}`, {
+          method: 'PUT',
+          body: data,
+        });
+      } catch (error: any) {
+        toast.error('Fehler beim Aktualisieren des Workflows');
+        console.error('Error updating workflow:', error);
+        throw error;
+      }
+    },
+    
     startStage: async (id: string, stage: string) => {
       try {
         return await fetchAPI(`/workflows/${id}/stages/${stage}/start`, {
@@ -137,6 +156,19 @@ export const API = {
       } catch (error: any) {
         toast.error('Fehler beim Hinzufügen von Feedback');
         console.error('Error adding feedback:', error);
+        throw error;
+      }
+    },
+    
+    reviseStage: async (id: string, stage: string, feedback: string, revision_instructions?: string) => {
+      try {
+        return await fetchAPI(`/workflows/${id}/stages/${stage}/revise`, {
+          method: 'POST',
+          body: { feedback, revision_instructions },
+        });
+      } catch (error: any) {
+        toast.error('Fehler bei der Überarbeitung');
+        console.error('Error revising stage:', error);
         throw error;
       }
     },
@@ -187,6 +219,20 @@ export const API = {
       } catch (error: any) {
         toast.error('Fehler beim Hochladen des Dokuments');
         console.error('Error uploading document:', error);
+        throw error;
+      }
+    },
+    
+    update: async (id: string, formData: FormData) => {
+      try {
+        return await fetchAPI(`/documents/${id}`, {
+          method: 'PUT',
+          body: formData,
+          isFormData: true
+        });
+      } catch (error: any) {
+        toast.error('Fehler beim Aktualisieren des Dokuments');
+        console.error('Error updating document:', error);
         throw error;
       }
     },
@@ -276,6 +322,25 @@ export const API = {
       } catch (error: any) {
         toast.error('Fehler beim Extrahieren des Inhalts');
         console.error('Error extracting content:', error);
+        throw error;
+      }
+    },
+    
+    search: async (query: string, numResults: number = 5) => {
+      try {
+        const formData = new FormData();
+        formData.append('query', query);
+        formData.append('num_results', String(numResults));
+        formData.append('extract_content', 'true');
+        
+        return await fetchAPI('/sources/search', {
+          method: 'POST',
+          body: formData,
+          isFormData: true,
+        });
+      } catch (error: any) {
+        toast.error('Fehler bei der Suche');
+        console.error('Error performing search:', error);
         throw error;
       }
     },
@@ -436,6 +501,18 @@ export const API = {
       } catch (error: any) {
         toast.error('Fehler bei der SEO-Optimierung');
         console.error('Error during SEO optimization:', error);
+        throw error;
+      }
+    },
+    
+    workflowExecution: async (workflowId: string, stage: string) => {
+      try {
+        return await fetchAPI(`/agents/workflow-execution/${workflowId}/${stage}`, {
+          method: 'POST',
+        });
+      } catch (error: any) {
+        toast.error('Fehler bei der Workflow-Ausführung');
+        console.error('Error executing workflow stage:', error);
         throw error;
       }
     },
