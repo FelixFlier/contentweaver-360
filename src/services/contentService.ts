@@ -1,5 +1,4 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { API } from '@/services/apiService';
 import { toast } from 'sonner';
 
 export interface Content {
@@ -29,54 +28,49 @@ export interface ContentUpdateInput {
   status?: 'draft' | 'published';
 }
 
-// Aktiviert Supabase-Channel für Realtime-Updates
-export const subscribeToContents = (callback: (payload: any) => void) => {
-  const channel = supabase
-    .channel('content-changes')
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'contents' 
-      }, 
-      (payload) => {
-        callback(payload);
-      }
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-};
-
-// Get all contents for authenticated user
+/**
+ * Get all content for the current user
+ */
 export const getUserContents = async (): Promise<Content[]> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get workflows from the API
+    const workflows = await API.workflows.list();
     
-    if (!user) {
-      throw new Error('Nicht angemeldet');
-    }
-    
-    const { data, error } = await supabase
-      .from('contents')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // Typsichere Konvertierung der Daten
-    const typedData = (data || []).map(item => ({
-      ...item,
-      type: item.type as 'blog' | 'linkedin',
-      status: item.status as 'draft' | 'published'
-    }));
-
-    return typedData as Content[];
+    // Map workflows to content structure
+    return workflows.map((workflow: any) => {
+      // Extract content from workflow data
+      let content = '';
+      const stages = workflow.stages || {};
+      
+      // Try to get content from various stages based on priority
+      if (stages.seo_optimization?.data?.article) {
+        content = stages.seo_optimization.data.article;
+      } else if (stages.editing?.data?.article) {
+        content = stages.editing.data.article;
+      } else if (stages.writing?.data?.article) {
+        content = stages.writing.data.article;
+      } else if (typeof stages.writing?.data === 'string') {
+        content = stages.writing.data;
+      }
+      
+      // Determine content type from metadata
+      const contentType = workflow.metadata?.content_type || 'blog';
+      
+      // Determine status
+      const status = workflow.current_stage === 'social_media' ? 'published' : 'draft';
+      
+      return {
+        id: workflow.id,
+        title: workflow.topic,
+        description: workflow.metadata?.description || null,
+        type: contentType as 'blog' | 'linkedin',
+        content: content || null,
+        status: status,
+        created_at: workflow.created_at,
+        updated_at: workflow.updated_at,
+        user_id: workflow.user_id
+      };
+    });
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden der Inhalte');
     console.error('Error fetching contents:', error);
@@ -84,27 +78,50 @@ export const getUserContents = async (): Promise<Content[]> => {
   }
 };
 
-// Get a specific content by id
+/**
+ * Get content by ID
+ */
 export const getContentById = async (id: string): Promise<Content | null> => {
   try {
-    const { data, error } = await supabase
-      .from('contents')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      throw new Error(error.message);
+    // Get workflow from the API
+    const workflow = await API.workflows.get(id);
+    
+    if (!workflow) {
+      return null;
     }
-
-    // Typsichere Konvertierung
-    const typedData = {
-      ...data,
-      type: data.type as 'blog' | 'linkedin',
-      status: data.status as 'draft' | 'published'
+    
+    // Extract content from workflow data
+    let content = '';
+    const stages = workflow.stages || {};
+    
+    // Try to get content from various stages based on priority
+    if (stages.seo_optimization?.data?.article) {
+      content = stages.seo_optimization.data.article;
+    } else if (stages.editing?.data?.article) {
+      content = stages.editing.data.article;
+    } else if (stages.writing?.data?.article) {
+      content = stages.writing.data.article;
+    } else if (typeof stages.writing?.data === 'string') {
+      content = stages.writing.data;
+    }
+    
+    // Determine content type from metadata
+    const contentType = workflow.metadata?.content_type || 'blog';
+    
+    // Determine status
+    const status = workflow.current_stage === 'social_media' ? 'published' : 'draft';
+    
+    return {
+      id: workflow.id,
+      title: workflow.topic,
+      description: workflow.metadata?.description || null,
+      type: contentType as 'blog' | 'linkedin',
+      content: content || null,
+      status: status,
+      created_at: workflow.created_at,
+      updated_at: workflow.updated_at,
+      user_id: workflow.user_id
     };
-
-    return typedData as Content;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden des Inhalts');
     console.error('Error fetching content by id:', error);
@@ -112,37 +129,37 @@ export const getContentById = async (id: string): Promise<Content | null> => {
   }
 };
 
-// Create a new content
+/**
+ * Create new content through workflow API
+ */
 export const createContent = async (input: ContentCreateInput): Promise<Content | null> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('Nicht angemeldet');
-    }
-    
-    const { data, error } = await supabase
-      .from('contents')
-      .insert([{
-        ...input,
-        user_id: user.id
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    // Typsichere Konvertierung
-    const typedData = {
-      ...data,
-      type: data.type as 'blog' | 'linkedin',
-      status: data.status as 'draft' | 'published'
+    // Create workflow
+    const workflowData = {
+      topic: input.title,
+      metadata: {
+        description: input.description,
+        content_type: input.type,
+        style_id: input.styleId
+      }
     };
-
+    
+    const workflow = await API.workflows.create(workflowData);
+    
     toast.success('Inhalt erfolgreich erstellt');
-    return typedData as Content;
+    
+    // Format as content
+    return {
+      id: workflow.id,
+      title: workflow.topic,
+      description: workflow.metadata?.description || null,
+      type: input.type,
+      content: input.content || null,
+      status: 'draft',
+      created_at: workflow.created_at,
+      updated_at: workflow.updated_at,
+      user_id: workflow.user_id
+    };
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Erstellen des Inhalts');
     console.error('Error creating content:', error);
@@ -150,29 +167,74 @@ export const createContent = async (input: ContentCreateInput): Promise<Content 
   }
 };
 
-// Update an existing content
+/**
+ * Update content
+ */
 export const updateContent = async (id: string, input: ContentUpdateInput): Promise<Content | null> => {
   try {
-    const { data, error } = await supabase
-      .from('contents')
-      .update(input)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(error.message);
+    // Get current workflow
+    const workflow = await API.workflows.get(id);
+    
+    if (!workflow) {
+      throw new Error('Workflow not found');
     }
-
-    // Typsichere Konvertierung
-    const typedData = {
-      ...data,
-      type: data.type as 'blog' | 'linkedin',
-      status: data.status as 'draft' | 'published'
-    };
-
-    toast.success('Inhalt erfolgreich aktualisiert');
-    return typedData as Content;
+    
+    // Determine current stage
+    const currentStage = workflow.current_stage || 'writing';
+    
+    // Update workflow metadata if needed
+    if (input.title || input.description) {
+      const workflowUpdate = {
+        topic: input.title,
+        metadata: {
+          ...workflow.metadata,
+          description: input.description
+        }
+      };
+      
+      // Selective update
+      if (!input.title) delete workflowUpdate.topic;
+      if (!input.description) delete workflowUpdate.metadata.description;
+      
+      // Update workflow
+      await API.workflows.update(id, workflowUpdate);
+    }
+    
+    // Update content if provided
+    if (input.content) {
+      // Create formData
+      const formData = new FormData();
+      formData.append('article', input.content);
+      
+      // Submit to appropriate agent endpoint based on stage
+      if (currentStage === 'editing' || currentStage === 'fact_checking') {
+        await API.agents.edit(input.content);
+      } else if (currentStage === 'seo_optimization') {
+        await API.agents.seoOptimize(input.content, workflow.topic || '');
+      } else {
+        // Default to writing stage
+        const stages = workflow.stages || {};
+        const researchData = stages.research?.data || '';
+        const contentPlan = stages.planning?.data || '';
+        const styleProfile = stages.style_analysis?.data || '';
+        
+        await API.agents.write(
+          workflow.topic || '',
+          typeof contentPlan === 'string' ? contentPlan : JSON.stringify(contentPlan),
+          typeof researchData === 'string' ? researchData : JSON.stringify(researchData),
+          typeof styleProfile === 'string' ? styleProfile : JSON.stringify(styleProfile)
+        );
+      }
+    }
+    
+    // Update status if needed
+    if (input.status === 'published' && workflow.current_stage !== 'social_media') {
+      // Move to social media stage
+      await API.workflows.startStage(id, 'social_media');
+    }
+    
+    // Get updated content
+    return await getContentById(id);
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Aktualisieren des Inhalts');
     console.error('Error updating content:', error);
@@ -180,18 +242,14 @@ export const updateContent = async (id: string, input: ContentUpdateInput): Prom
   }
 };
 
-// Delete a content
+/**
+ * Delete content
+ */
 export const deleteContent = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('contents')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
+    // Delete workflow
+    await API.workflows.deleteWorkflow(id);
+    
     toast.success('Inhalt erfolgreich gelöscht');
     return true;
   } catch (error: any) {
