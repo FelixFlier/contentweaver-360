@@ -1,29 +1,41 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-interface AuthContextProps {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  updateProfile: (updates: { name?: string; email?: string; bio?: string; location?: string; avatar_url?: string }) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+// src/contexts/AuthContext.tsx - Modifiziere die AuthProvider-Komponente
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Auto-Login für Entwicklungszwecke
+    const mockUser = {
+      id: 'mock-user-id',
+      email: 'user@example.com',
+      aud: 'authenticated',
+      role: 'authenticated',
+      app_metadata: {},
+      user_metadata: { name: 'Test User' },
+      created_at: new Date().toISOString()
+    };
+    
+    const mockSession = {
+      access_token: 'mock-token',
+      token_type: 'bearer',
+      expires_in: 3600,
+      refresh_token: 'mock-refresh',
+      user: mockUser,
+      expires_at: Math.floor(Date.now() / 1000) + 3600
+    };
+
+    setUser(mockUser as User);
+    setSession(mockSession as Session);
+    setIsLoading(false);
+    
+    // Speichere im localStorage für Persistenz
+    localStorage.setItem('isLoggedIn', 'true');
+    
+    // Originaler Supabase Auth Code (auskommentiert)
+    /*
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -43,16 +55,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
+    */
+    
+    return () => {};
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      // Mock-Anmeldung statt echter Authentifizierung
+      const mockUser = {
+        id: 'mock-user-id',
+        email: email,
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: { name: 'Test User' },
+        created_at: new Date().toISOString()
+      };
       
-      if (error) {
-        throw error;
-      }
+      const mockSession = {
+        access_token: 'mock-token',
+        token_type: 'bearer',
+        expires_in: 3600,
+        refresh_token: 'mock-refresh',
+        user: mockUser,
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      };
+      
+      setUser(mockUser as User);
+      setSession(mockSession as Session);
+      localStorage.setItem('isLoggedIn', 'true');
       
       toast.success('Erfolgreich angemeldet');
       navigate('/');
@@ -67,21 +100,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, name: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            name
-          }
-        }
-      });
+      // Mock-Registrierung
+      const mockUser = {
+        id: 'mock-user-id',
+        email: email,
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: { name: name },
+        created_at: new Date().toISOString()
+      };
       
-      if (error) {
-        throw error;
-      }
+      const mockSession = {
+        access_token: 'mock-token',
+        token_type: 'bearer',
+        expires_in: 3600,
+        refresh_token: 'mock-refresh',
+        user: mockUser,
+        expires_at: Math.floor(Date.now() / 1000) + 3600
+      };
       
-      toast.success('Registrierung erfolgreich. Bitte prüfen Sie Ihre E-Mails.');
+      setUser(mockUser as User);
+      setSession(mockSession as Session);
+      localStorage.setItem('isLoggedIn', 'true');
+      
+      toast.success('Registrierung erfolgreich');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Registrierung fehlgeschlagen');
       console.error(error);
@@ -93,11 +137,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        throw error;
-      }
+      // Mock sign out
+      setUser(null);
+      setSession(null);
+      localStorage.removeItem('isLoggedIn');
       
       toast.success('Erfolgreich abgemeldet');
       navigate('/');
@@ -117,15 +160,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       setIsLoading(true);
       
-      // Update profile in the profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id);
-        
-      if (error) {
-        throw error;
-      }
+      // Mock Profil-Update
+      setUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          user_metadata: {
+            ...prev.user_metadata,
+            ...updates
+          }
+        };
+      });
       
       toast.success('Profil aktualisiert');
     } catch (error: any) {
@@ -147,12 +192,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };
