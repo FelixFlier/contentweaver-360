@@ -1,4 +1,4 @@
-
+// src/pages/AllContentsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Filter, Plus, Search, Grid2X2, List as ListIcon, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Filter, Plus, Search, Grid2X2, List as ListIcon, ChevronDown, Loader2 } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import ContentCard, { ContentCardProps } from '@/components/content/ContentCard';
 import Navbar from '@/components/layout/Navbar';
+import { getUserContents, Content } from '@/services/contentService';
 
 type ContentType = 'all' | 'blog' | 'linkedin';
 type ContentStatus = 'all' | 'inprogress' | 'feedback' | 'completed';
@@ -33,96 +34,50 @@ const AllContentsPage = () => {
   const [typeFilter, setTypeFilter] = useState<ContentType>('all');
   const [statusFilter, setStatusFilter] = useState<ContentStatus>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [contents, setContents] = useState<Content[]>([]);
   
-  // Mock content data
-  const allContents: ContentCardProps[] = [
-    {
-      id: '1',
-      title: 'Die Zukunft der KI im digitalen Marketing',
-      type: 'blog',
-      status: 'inprogress',
-      progress: 45,
-      lastUpdated: 'Vor 2 Stunden'
-    },
-    {
-      id: '2',
-      title: 'Warum Innovation der Schlüssel zum Erfolg ist',
-      type: 'linkedin',
-      status: 'feedback',
-      progress: 75,
-      lastUpdated: 'Gestern'
-    },
-    {
-      id: '3',
-      title: 'Beste Praktiken für Remote-Teams im Jahr 2023',
-      type: 'blog',
-      status: 'completed',
-      progress: 100,
-      lastUpdated: 'Vor 3 Tagen'
-    },
-    {
-      id: '4',
-      title: 'Die 5 wichtigsten Trends in der digitalen Transformation',
-      type: 'blog',
-      status: 'inprogress',
-      progress: 30,
-      lastUpdated: 'Vor 1 Tag'
-    },
-    {
-      id: '5',
-      title: '10 Tipps für erfolgreiches Content Marketing',
-      type: 'blog',
-      status: 'completed',
-      progress: 100,
-      lastUpdated: 'Vor 1 Woche'
-    },
-    {
-      id: '6',
-      title: 'Die Macht der Datenanalyse für Geschäftsentscheidungen',
-      type: 'linkedin',
-      status: 'inprogress',
-      progress: 15,
-      lastUpdated: 'Vor 4 Stunden'
-    },
-    {
-      id: '7',
-      title: 'Nachhaltige Geschäftsmodelle für die Zukunft',
-      type: 'blog',
-      status: 'completed',
-      progress: 100,
-      lastUpdated: 'Vor 2 Wochen'
-    },
-    {
-      id: '8',
-      title: 'Wie man virtuelle Teams effektiv führt',
-      type: 'linkedin',
-      status: 'inprogress',
-      progress: 60,
-      lastUpdated: 'Vor 3 Tagen'
-    },
-    {
-      id: '9',
-      title: 'Die Bedeutung von User Experience Design',
-      type: 'blog',
-      status: 'feedback',
-      progress: 85,
-      lastUpdated: 'Vor 5 Tagen'
-    },
-    {
-      id: '10',
-      title: 'Erfolgreiche Social Media Strategien 2023',
-      type: 'blog',
-      status: 'inprogress',
-      progress: 40,
-      lastUpdated: 'Vor 6 Stunden'
+  useEffect(() => {
+    const fetchContents = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getUserContents();
+        setContents(data);
+      } catch (error) {
+        console.error('Error fetching contents:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchContents();
+  }, []);
+
+  // Map contents to ContentCardProps
+  const mapToContentCard = (content: Content): ContentCardProps => {
+    // Map status from content.status ('draft'/'published') to ContentCardProps status
+    let status: 'inprogress' | 'feedback' | 'completed' = 'inprogress';
+    if (content.status === 'published') {
+      status = 'completed';
     }
-  ];
+    
+    return {
+      id: content.id,
+      title: content.title,
+      type: content.type,
+      status: status,
+      progress: content.status === 'published' ? 100 : 50, // Vereinfacht
+      lastUpdated: new Date(content.updated_at).toLocaleDateString('de-DE')
+    };
+  };
 
   // Filter and sort content
-  const filteredContents = allContents
+  const filteredContents = contents
     .filter(content => {
       const matchesType = typeFilter === 'all' || content.type === typeFilter;
-      const matchesStatus = statusFilter === 'all' || content.status === statusFilter;
+      const matchesStatus = statusFilter === 'all' || 
+                           (statusFilter === 'completed' && content.status === 'published') || 
+                           (statusFilter === 'inprogress' && content.status === 'draft');
       const matchesSearch = content.title.toLowerCase().includes(searchTerm.toLowerCase());
       
       return matchesType && matchesStatus && matchesSearch;
@@ -130,17 +85,21 @@ const AllContentsPage = () => {
     .sort((a, b) => {
       switch (sortBy) {
         case 'newest':
-          return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
         case 'oldest':
-          return new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime();
+          return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
         case 'alphabetical':
           return a.title.localeCompare(b.title);
         case 'progress':
-          return b.progress - a.progress;
+          if (a.status === 'published' && b.status !== 'published') return -1;
+          if (a.status !== 'published' && b.status === 'published') return 1;
+          return 0;
         default:
           return 0;
       }
     });
+
+  const contentCards = filteredContents.map(mapToContentCard);
 
   return (
     <div className="min-h-screen bg-background">
@@ -201,7 +160,7 @@ const AllContentsPage = () => {
                 {filteredContents.length} Inhalte
               </span>
               <span className="text-sm font-medium bg-accent/20 text-accent-foreground px-3 py-1 rounded-full">
-                {allContents.filter(c => c.status === 'completed').length} Abgeschlossen
+                {contents.filter(c => c.status === 'published').length} Abgeschlossen
               </span>
             </div>
           </div>
@@ -305,12 +264,16 @@ const AllContentsPage = () => {
           </TabsList>
           
           <TabsContent value="all" className="mt-4">
-            {filteredContents.length > 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center py-16">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              </div>
+            ) : contentCards.length > 0 ? (
               <div className={viewMode === 'grid' 
                 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                 : "space-y-3"
               }>
-                {filteredContents.map(content => (
+                {contentCards.map(content => (
                   <ContentCard key={content.id} {...content} />
                 ))}
               </div>
@@ -325,14 +288,20 @@ const AllContentsPage = () => {
           </TabsContent>
           
           <TabsContent value="recent" className="mt-4">
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-              : "space-y-3"
-            }>
-              {filteredContents.slice(0, 3).map(content => (
-                <ContentCard key={content.id} {...content} />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-16">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' 
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                : "space-y-3"
+              }>
+                {contentCards.slice(0, 3).map(content => (
+                  <ContentCard key={content.id} {...content} />
+                ))}
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="favorite" className="mt-4">
