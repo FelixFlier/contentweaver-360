@@ -1,195 +1,190 @@
-// src/contexts/AuthContext.tsx - Modifiziere die AuthProvider-Komponente
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface AuthContextValue {
+  user: any;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, name?: string) => Promise<any>;
+  signOut: () => Promise<void>;
+  isLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Auto-Login für Entwicklungszwecke
-    const mockUser = {
-      id: 'mock-user-id',
-      email: 'user@example.com',
-      aud: 'authenticated',
-      role: 'authenticated',
-      app_metadata: {},
-      user_metadata: { name: 'Test User' },
-      created_at: new Date().toISOString()
-    };
+  // Initialisierungsfunktion
+  const initializeAuth = async () => {
+    setIsLoading(true);
     
-    const mockSession = {
-      access_token: 'mock-token',
-      token_type: 'bearer',
-      expires_in: 3600,
-      refresh_token: 'mock-refresh',
-      user: mockUser,
-      expires_at: Math.floor(Date.now() / 1000) + 3600
-    };
-
-    setUser(mockUser as User);
-    setSession(mockSession as Session);
-    setIsLoading(false);
-    
-    // Speichere im localStorage für Persistenz
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    // Originaler Supabase Auth Code (auskommentiert)
-    /*
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user || null);
-      setIsLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
+    try {
+      // TESTMODUS: Immer einen Test-Benutzer bereitstellen
+      if (import.meta.env.VITE_TEST_MODE === 'true') {
+        localStorage.setItem('isLoggedIn', 'true');
+        setUser({
+          id: 'test-user-id',
+          email: 'test@example.com',
+        });
         setIsLoading(false);
+        return;
       }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-    */
-    
-    return () => {};
-  }, []);
-
+      
+      // Normale Authentifizierung
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session:', error);
+      } else if (data?.session) {
+        setUser(data.session.user);
+        localStorage.setItem('isLoggedIn', 'true');
+      } else {
+        // Für den Testmodus trotzdem angemeldet bleiben
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+          setUser({
+            id: 'test-user-id',
+            email: 'test@example.com',
+          });
+        } else {
+          setUser(null);
+        }
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      // Im Testmodus Fehler ignorieren
+      if (import.meta.env.VITE_TEST_MODE === 'true') {
+        localStorage.setItem('isLoggedIn', 'true');
+        setUser({
+          id: 'test-user-id',
+          email: 'test@example.com',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Anmeldungsfunktion
   const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      // Mock-Anmeldung statt echter Authentifizierung
-      const mockUser = {
-        id: 'mock-user-id',
-        email: email,
-        aud: 'authenticated',
-        role: 'authenticated',
-        app_metadata: {},
-        user_metadata: { name: 'Test User' },
-        created_at: new Date().toISOString()
-      };
-      
-      const mockSession = {
-        access_token: 'mock-token',
-        token_type: 'bearer',
-        expires_in: 3600,
-        refresh_token: 'mock-refresh',
-        user: mockUser,
-        expires_at: Math.floor(Date.now() / 1000) + 3600
-      };
-      
-      setUser(mockUser as User);
-      setSession(mockSession as Session);
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast.success('Erfolgreich angemeldet');
-      navigate('/');
-    } catch (error: any) {
-      toast.error(error.message || 'Anmeldung fehlgeschlagen');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signUp = async (email: string, password: string, name: string) => {
-    try {
-      setIsLoading(true);
-      // Mock-Registrierung
-      const mockUser = {
-        id: 'mock-user-id',
-        email: email,
-        aud: 'authenticated',
-        role: 'authenticated',
-        app_metadata: {},
-        user_metadata: { name: name },
-        created_at: new Date().toISOString()
-      };
-      
-      const mockSession = {
-        access_token: 'mock-token',
-        token_type: 'bearer',
-        expires_in: 3600,
-        refresh_token: 'mock-refresh',
-        user: mockUser,
-        expires_at: Math.floor(Date.now() / 1000) + 3600
-      };
-      
-      setUser(mockUser as User);
-      setSession(mockSession as Session);
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      toast.success('Registrierung erfolgreich');
-      navigate('/');
-    } catch (error: any) {
-      toast.error(error.message || 'Registrierung fehlgeschlagen');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setIsLoading(true);
-      // Mock sign out
-      setUser(null);
-      setSession(null);
-      localStorage.removeItem('isLoggedIn');
-      
-      toast.success('Erfolgreich abgemeldet');
-      navigate('/');
-    } catch (error: any) {
-      toast.error(error.message || 'Abmeldung fehlgeschlagen');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateProfile = async (updates: { name?: string; email?: string; bio?: string; location?: string; avatar_url?: string }) => {
-    try {
-      if (!user) {
-        throw new Error('Benutzer nicht angemeldet');
-      }
-
-      setIsLoading(true);
-      
-      // Mock Profil-Update
-      setUser((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          user_metadata: {
-            ...prev.user_metadata,
-            ...updates
-          }
+      // TESTMODUS: Direkt anmelden
+      if (import.meta.env.VITE_TEST_MODE === 'true') {
+        const testUser = {
+          id: 'test-user-id',
+          email: email || 'test@example.com',
         };
+        setUser(testUser);
+        localStorage.setItem('isLoggedIn', 'true');
+        toast.success('Erfolgreich angemeldet (Testmodus)');
+        return { user: testUser };
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+      
+      setUser(data.user);
+      localStorage.setItem('isLoggedIn', 'true');
+      toast.success('Erfolgreich angemeldet');
+      return data;
+    } catch (error: any) {
+      toast.error(error.message || 'Fehler bei der Anmeldung');
+      throw error;
+    }
+  };
+  
+  // Registrierungsfunktion
+  const signUp = async (email: string, password: string, name?: string) => {
+    try {
+      // TESTMODUS: Direkt registrieren
+      if (import.meta.env.VITE_TEST_MODE === 'true') {
+        const testUser = {
+          id: 'test-user-id',
+          email: email,
+        };
+        setUser(testUser);
+        localStorage.setItem('isLoggedIn', 'true');
+        toast.success('Erfolgreich registriert (Testmodus)');
+        return { user: testUser };
+      }
+      
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            name: name || email.split('@')[0],
+          }
+        }
       });
       
-      toast.success('Profil aktualisiert');
+      if (error) throw error;
+      
+      // In einer realen Implementierung könnte hier ein Profil erstellt werden
+      
+      toast.success('Registrierung erfolgreich! Bitte bestätigen Sie Ihre E-Mail-Adresse.');
+      return data;
     } catch (error: any) {
-      toast.error(error.message || 'Profilaktualisierung fehlgeschlagen');
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      toast.error(error.message || 'Fehler bei der Registrierung');
+      throw error;
+    }
+  };
+  
+  // Abmeldungsfunktion
+  const signOut = async () => {
+    try {
+      if (import.meta.env.VITE_TEST_MODE === 'true') {
+        localStorage.removeItem('isLoggedIn');
+        setUser(null);
+        toast.success('Abgemeldet (Testmodus)');
+        return;
+      }
+      
+      await supabase.auth.signOut();
+      setUser(null);
+      localStorage.removeItem('isLoggedIn');
+      toast.success('Erfolgreich abgemeldet');
+    } catch (error: any) {
+      toast.error(error.message || 'Fehler bei der Abmeldung');
+      console.error('Sign out error:', error);
     }
   };
 
-  const value = {
-    user,
-    session,
-    isLoading,
-    signIn,
-    signUp,
-    signOut,
-    updateProfile
-  };
+  // Initialization
+  useEffect(() => {
+    initializeAuth();
+    
+    // Auth state subscription only when not in test mode
+    if (import.meta.env.VITE_TEST_MODE !== 'true') {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN') {
+          setUser(session?.user || null);
+          localStorage.setItem('isLoggedIn', 'true');
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          localStorage.removeItem('isLoggedIn');
+        }
+      });
+      
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, []);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut, isLoading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
