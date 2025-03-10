@@ -1,10 +1,10 @@
-
+// src/pages/ContentList.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Folder, ArrowRight, Loader2 } from 'lucide-react';
 import ContentCard from '@/components/content/ContentCard';
 import { Button } from '@/components/ui/button';
-import { getUserContents, subscribeToContents, Content } from '@/services/contentService';
+import { getUserContents, Content } from '@/services/contentService';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/layout/Navbar';
 
@@ -16,7 +16,7 @@ const ContentList = () => {
   
   useEffect(() => {
     const fetchContents = async () => {
-      if (user) {
+      if (user || localStorage.getItem('isLoggedIn') === 'true') {
         setIsLoading(true);
         const data = await getUserContents();
         setContents(data);
@@ -25,48 +25,6 @@ const ContentList = () => {
     };
     
     fetchContents();
-    
-    // Realtime-Abonnement für Inhaltsänderungen
-    const unsubscribe = subscribeToContents((payload) => {
-      console.log('Realtime update:', payload);
-      const { eventType, new: newRecord, old: oldRecord } = payload;
-      
-      // Nur Daten des eingeloggten Benutzers aktualisieren
-      if (user && newRecord && newRecord.user_id === user.id) {
-        switch (eventType) {
-          case 'INSERT':
-            setContents(prev => [
-              {
-                ...newRecord,
-                type: newRecord.type as 'blog' | 'linkedin',
-                status: newRecord.status as 'draft' | 'published'
-              } as Content, 
-              ...prev
-            ]);
-            break;
-          case 'UPDATE':
-            setContents(prev => prev.map(item => 
-              item.id === newRecord.id 
-                ? { 
-                    ...newRecord, 
-                    type: newRecord.type as 'blog' | 'linkedin',
-                    status: newRecord.status as 'draft' | 'published'
-                  } as Content
-                : item
-            ));
-            break;
-          case 'DELETE':
-            if (oldRecord) {
-              setContents(prev => prev.filter(item => item.id !== oldRecord.id));
-            }
-            break;
-        }
-      }
-    });
-    
-    return () => {
-      unsubscribe();
-    };
   }, [user]);
 
   // Map contents to ContentCardProps
@@ -81,7 +39,7 @@ const ContentList = () => {
     }));
   };
 
-  if (!user) {
+  if (!user && localStorage.getItem('isLoggedIn') !== 'true') {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
