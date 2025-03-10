@@ -1,5 +1,5 @@
-
-import React, { useEffect } from 'react';
+// src/pages/Index.tsx
+import React, { useEffect, useState } from 'react';
 import { 
   FileText, 
   Sparkles, 
@@ -8,7 +8,8 @@ import {
   ChevronRight, 
   Search, 
   LineChart, 
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -19,79 +20,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import TutorialDialog from '@/components/tutorial/TutorialDialog';
 import { useTutorial } from '@/hooks/use-tutorial';
 import { cn } from '@/lib/utils';
-
-const recentContents = [
-  {
-    id: '1',
-    title: 'Die Zukunft der KI im digitalen Marketing',
-    type: 'blog' as const,
-    status: 'inprogress' as const,
-    progress: 45,
-    lastUpdated: 'Vor 2 Stunden'
-  },
-  {
-    id: '2',
-    title: 'Warum Innovation der Schlüssel zum Erfolg ist',
-    type: 'linkedin' as const,
-    status: 'feedback' as const,
-    progress: 75,
-    lastUpdated: 'Gestern'
-  },
-  {
-    id: '3',
-    title: 'Beste Praktiken für Remote-Teams im Jahr 2023',
-    type: 'blog' as const,
-    status: 'completed' as const,
-    progress: 100,
-    lastUpdated: 'Vor 3 Tagen'
-  },
-  {
-    id: '4',
-    title: 'Die 5 wichtigsten Trends in der digitalen Transformation',
-    type: 'blog' as const,
-    status: 'inprogress' as const,
-    progress: 30,
-    lastUpdated: 'Vor 1 Tag'
-  }
-];
-
-const recentActivities = [
-  {
-    id: '1',
-    type: 'feedback' as const,
-    contentTitle: 'Warum Innovation der Schlüssel zum Erfolg ist',
-    contentType: 'linkedin' as const,
-    timestamp: 'Vor 1 Stunde'
-  },
-  {
-    id: '2',
-    type: 'updated' as const,
-    contentTitle: 'Die Zukunft der KI im digitalen Marketing',
-    contentType: 'blog' as const,
-    timestamp: 'Vor 2 Stunden'
-  },
-  {
-    id: '3',
-    type: 'created' as const,
-    contentTitle: 'Die 5 wichtigsten Trends in der digitalen Transformation',
-    contentType: 'blog' as const,
-    timestamp: 'Vor 1 Tag'
-  },
-  {
-    id: '4',
-    type: 'completed' as const,
-    contentTitle: 'Beste Praktiken für Remote-Teams im Jahr 2023',
-    contentType: 'blog' as const,
-    timestamp: 'Vor 3 Tagen'
-  },
-  {
-    id: '5',
-    type: 'created' as const,
-    contentTitle: 'Warum Innovation der Schlüssel zum Erfolg ist',
-    contentType: 'linkedin' as const,
-    timestamp: 'Vor 4 Tagen'
-  }
-];
+import { getUserContents, Content } from '@/services/contentService';
+import { ContentCardProps } from '@/components/content/ContentCard';
 
 const featureCards = [
   {
@@ -135,13 +65,158 @@ const featureCards = [
 const Index = () => {
   const navigate = useNavigate();
   const { hasSeenTutorial, showTutorial, setHasSeenTutorial, setShowTutorial } = useTutorial();
+  const [recentContents, setRecentContents] = useState<ContentCardProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Generiere Aktivitäten basierend auf Inhalten
+  const generateActivities = (contents: Content[]) => {
+    const activities = [];
+    
+    for (const content of contents) {
+      // Erstelle eine "erstellt" Aktivität
+      activities.push({
+        id: `created-${content.id}`,
+        type: 'created' as const,
+        contentTitle: content.title,
+        contentType: content.type as 'blog' | 'linkedin',
+        timestamp: `Vor ${getTimeAgo(new Date(content.created_at))}`
+      });
+      
+      // Wenn die letzte Aktualisierung nach der Erstellung liegt, füge "aktualisiert" hinzu
+      const createdAt = new Date(content.created_at).getTime();
+      const updatedAt = new Date(content.updated_at).getTime();
+      
+      if (updatedAt > createdAt) {
+        activities.push({
+          id: `updated-${content.id}`,
+          type: 'updated' as const,
+          contentTitle: content.title,
+          contentType: content.type as 'blog' | 'linkedin',
+          timestamp: `Vor ${getTimeAgo(new Date(content.updated_at))}`
+        });
+      }
+      
+      // Wenn veröffentlicht, füge "abgeschlossen" hinzu
+      if (content.status === 'published') {
+        activities.push({
+          id: `completed-${content.id}`,
+          type: 'completed' as const,
+          contentTitle: content.title,
+          contentType: content.type as 'blog' | 'linkedin',
+          timestamp: `Vor ${getTimeAgo(new Date(content.updated_at))}`
+        });
+      }
+    }
+    
+    // Sortiere nach neustem Datum zuerst
+    return activities.sort((a, b) => {
+      const timeA = parseTimeAgo(a.timestamp);
+      const timeB = parseTimeAgo(b.timestamp);
+      return timeA - timeB;
+    });
+  };
+  
+  // Hilfsfunktion zum Parsen von "Vor X [Einheit]" zu Millisekunden
+  const parseTimeAgo = (timeAgo: string) => {
+    const match = timeAgo.match(/Vor\s+(\d+)\s+(\w+)/);
+    if (!match) return 0;
+    
+    const [_, amount, unit] = match;
+    const value = parseInt(amount);
+    
+    switch(unit) {
+      case 'Minuten':
+      case 'Minute':
+        return value * 60 * 1000;
+      case 'Stunden':
+      case 'Stunde':
+        return value * 60 * 60 * 1000;
+      case 'Tagen':
+      case 'Tag':
+        return value * 24 * 60 * 60 * 1000;
+      case 'Wochen':
+      case 'Woche':
+        return value * 7 * 24 * 60 * 60 * 1000;
+      default:
+        return 0;
+    }
+  };
+  
+  // Hilfsfunktion zur Berechnung von "Vor X [Einheit]"
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (60 * 1000));
+    
+    if (diffMins < 60) {
+      return `${diffMins} Minuten`;
+    }
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) {
+      return `${diffHours} Stunden`;
+    }
+    
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) {
+      return `${diffDays} Tagen`;
+    }
+    
+    const diffWeeks = Math.floor(diffDays / 7);
+    return `${diffWeeks} Wochen`;
+  };
+
+  // ContentCard-Daten aus Content-Objekten erstellen
+  const mapContentsToCards = (contents: Content[]): ContentCardProps[] => {
+    return contents.map(content => ({
+      id: content.id,
+      title: content.title,
+      type: content.type,
+      status: content.status === 'published' ? 'completed' as const : 'inprogress' as const,
+      progress: content.status === 'published' ? 100 : 50, // Vereinfacht
+      lastUpdated: `Vor ${getTimeAgo(new Date(content.updated_at))}`
+    }));
+  };
 
   useEffect(() => {
     if (!hasSeenTutorial) {
       setShowTutorial(true);
       setHasSeenTutorial(true);
     }
+    
+    // Lade Inhalte beim Start
+    const fetchContents = async () => {
+      setIsLoading(true);
+      try {
+        const contents = await getUserContents();
+        // Sortiere nach letzter Aktualisierung
+        contents.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+        const cardProps = mapContentsToCards(contents);
+        setRecentContents(cardProps);
+      } catch (error) {
+        console.error('Fehler beim Laden der Inhalte:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchContents();
   }, [hasSeenTutorial, setHasSeenTutorial, setShowTutorial]);
+
+  // Generiere Aktivitäten basierend auf den geladenen Inhalten
+  const recentActivities = recentContents.length > 0 
+    ? generateActivities(recentContents.map(card => ({
+        id: card.id,
+        title: card.title,
+        type: card.type,
+        status: card.status === 'completed' ? 'published' : 'draft',
+        created_at: new Date().toISOString(), // Fallback
+        updated_at: new Date().toISOString(), // Fallback
+        user_id: '',
+        content: '',
+        description: ''
+      })))
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -210,11 +285,17 @@ const Index = () => {
               </div>
               
               <CardContent className="p-6 pt-6">
-                <ContentCarousel 
-                  title="" 
-                  items={recentContents}
-                  seeAllLink="/content"
-                />
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  </div>
+                ) : (
+                  <ContentCarousel 
+                    title="" 
+                    items={recentContents}
+                    seeAllLink="/content"
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -233,7 +314,13 @@ const Index = () => {
                 </div>
               </div>
               <CardContent className="p-6 pt-6">
-                <ActivityTimeline activities={recentActivities.slice(0, 4)} />
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                  </div>
+                ) : (
+                  <ActivityTimeline activities={recentActivities.slice(0, 4)} />
+                )}
               </CardContent>
             </Card>
           </div>
