@@ -40,6 +40,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
+import { API } from '@/services/apiService';
 
 const blogWorkflowSteps = [
   { id: 'style-analysis', label: 'Stilanalyse', description: 'Analyse und Anpassung des Schreibstils' },
@@ -107,29 +108,43 @@ const EditBlog = () => {
     const fetchContent = async () => {
       if (user && id) {
         setIsLoading(true);
-        const contentData = await getContentById(id);
-        
-        if (contentData) {
-          setContent(contentData);
-          setContentText(contentData.content || '');
+        try {
+          // Use the API through the service
+          const contentData = await getContentById(id);
           
-          const contentFiles = await getContentFiles(id);
-          setFiles(contentFiles);
-        } else {
-          toast.error('Inhalt nicht gefunden');
+          if (contentData) {
+            setContent(contentData);
+            setContentText(contentData.content || '');
+            
+            // Get files through the API
+            const contentFiles = await getContentFiles(id);
+            setFiles(contentFiles);
+          } else {
+            toast.error('Inhalt nicht gefunden');
+            navigate('/content');
+          }
+        } catch (error) {
+          console.error('Error fetching content:', error);
+          toast.error('Fehler beim Laden des Inhalts');
           navigate('/content');
+        } finally {
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     };
     
     fetchContent();
     
+    // Subscribe to file changes
     let unsubscribe: () => void;
     if (id) {
       unsubscribe = subscribeToFiles(id, (payload) => {
         console.log('Realtime file update:', payload);
+        if (payload.eventType === 'REFRESH') {
+          setFiles(payload.new);
+          return;
+        }
+
         const { eventType, new: newRecord, old: oldRecord } = payload;
         
         switch (eventType) {
@@ -156,53 +171,71 @@ const EditBlog = () => {
   }, [user, id, navigate]);
 
   const handleSave = async () => {
-    if (!content) return;
+    if (!content || !id) return;
     
     setIsSaving(true);
     
-    const updated = await updateContent(content.id, {
-      content: contentText
-    });
-    
-    if (updated) {
-      setContent(updated);
+    try {
+      // Use the API through the service
+      const updated = await updateContent(id, {
+        content: contentText
+      });
+      
+      if (updated) {
+        setContent(updated);
+        toast.success('Inhalt gespeichert');
+      } else {
+        throw new Error('Failed to update content');
+      }
+    } catch (error) {
+      console.error('Error saving content:', error);
+      toast.error('Fehler beim Speichern des Inhalts');
+    } finally {
+      setIsSaving(false);
     }
-    
-    setIsSaving(false);
   };
 
-  const handleSubmitFeedback = () => {
-    if (!feedback.trim()) {
+  const handleSubmitFeedback = async () => {
+    if (!feedback.trim() || !id) {
       toast.error("Bitte geben Sie Ihr Feedback ein");
       return;
     }
     
     setIsSubmittingFeedback(true);
     
-    setTimeout(() => {
+    try {
       setIsChangingPhase(true);
       
-      setTimeout(() => {
-        toast.success("Feedback gesendet");
-        setActiveTab('editor');
-        setFeedback('');
-        setIsSubmittingFeedback(false);
-        
-        updateContent(content.id, {
-          status: 'published'
-        }).then(updated => {
-          if (updated) {
-            setContent(updated);
-          }
-        });
-        
-        setIsChangingPhase(false);
-      }, 500);
-    }, 1000);
+      // Use the API to add feedback on the current stage
+      if (content?.current_stage) {
+        await API.workflows.addFeedback(id, content.current_stage, feedback);
+      }
+      
+      // Update status to published (this would move to next stage in your workflow)
+      await updateContent(id, {
+        status: 'published'
+      });
+      
+      toast.success("Feedback gesendet");
+      setActiveTab('editor');
+      setFeedback('');
+      
+      // Refresh content
+      const updated = await getContentById(id);
+      if (updated) {
+        setContent(updated);
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error('Fehler beim Senden des Feedbacks');
+    } finally {
+      setIsSubmittingFeedback(false);
+      setIsChangingPhase(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && content) {
+    if (e.target.files && e.target.files[0] && content && id) {
       const file = e.target.files[0];
       
       if (file.size > 5 * 1024 * 1024) {
@@ -212,27 +245,44 @@ const EditBlog = () => {
       
       setIsUploadingFile(true);
       
-      const uploaded = await uploadFile({
-        file,
-        content_id: content.id
-      });
-      
-      if (uploaded) {
-        setFiles(prev => [...prev, uploaded]);
+      try {
+        // Use the API through the service
+        const uploaded = await uploadFile({
+          file,
+          content_id: id
+        });
+        
+        if (uploaded) {
+          setFiles(prev => [...prev, uploaded]);
+          toast.success('Datei erfolgreich hochgeladen');
+        } else {
+          throw new Error('Failed to upload file');
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        toast.error('Fehler beim Hochladen der Datei');
+      } finally {
+        setIsUploadingFile(false);
+        e.target.value = '';
       }
-      
-      setIsUploadingFile(false);
-      
-      e.target.value = '';
     }
   };
 
   const handleDeleteFile = async (file: FileRecord) => {
     if (window.confirm(`Möchten Sie die Datei "${file.name}" wirklich löschen?`)) {
-      const deleted = await deleteFile(file.id, file.path);
-      
-      if (deleted) {
-        setFiles(prev => prev.filter(f => f.id !== file.id));
+      try {
+        // Use the API through the service
+        const deleted = await deleteFile(file.id, file.path);
+        
+        if (deleted) {
+          setFiles(prev => prev.filter(f => f.id !== file.id));
+          toast.success('Datei erfolgreich gelöscht');
+        } else {
+          throw new Error('Failed to delete file');
+        }
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        toast.error('Fehler beim Löschen der Datei');
       }
     }
   };
