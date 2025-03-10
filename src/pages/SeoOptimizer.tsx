@@ -1,5 +1,6 @@
+// src/pages/SeoOptimizer.tsx - Korrigierte Version
 import React, { useState } from 'react';
-import { TrendingUp, CheckCircle, AlertCircle, Sparkles, MoveUp, ArrowLeft, X } from 'lucide-react';
+import { TrendingUp, CheckCircle, AlertCircle, Sparkles, MoveUp, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
@@ -286,10 +287,6 @@ const SeoOptimizer = () => {
         </section>
       </main>
     </div>
-  );
-};
-
-export default SeoOptimizer;
   );
 };
 
