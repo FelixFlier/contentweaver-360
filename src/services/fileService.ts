@@ -1,5 +1,4 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { API } from '@/services/apiService';
 import { toast } from 'sonner';
 
 export interface FileRecord {
@@ -18,77 +17,34 @@ export interface FileInput {
   content_id?: string | null;
 }
 
-// Aktiviert Supabase-Channel für Realtime-Updates von Dateien
-export const subscribeToFiles = (contentId: string, callback: (payload: any) => void) => {
-  const channel = supabase
-    .channel('file-changes')
-    .on('postgres_changes', 
-      { 
-        event: '*', 
-        schema: 'public', 
-        table: 'files',
-        filter: `content_id=eq.${contentId}` 
-      }, 
-      (payload) => {
-        callback(payload);
-      }
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-};
-
-// Upload a file
+/**
+ * Upload a file using the documents API
+ */
 export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileRecord | null> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const formData = new FormData();
+    formData.append('file', file);
     
-    if (!user) {
-      throw new Error('Nicht angemeldet');
+    // Add tags if needed
+    if (content_id) {
+      formData.append('tags', `content:${content_id}`);
     }
     
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `${content_id ? `content/${content_id}` : 'general'}/${fileName}`;
-
-    // Upload to Storage
-    const { error: uploadError } = await supabase.storage
-      .from('content_files')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      throw uploadError;
+    // Upload through documents API
+    const response = await API.documents.upload(formData);
+    
+    // If content_id was provided, we need to update the file record
+    if (content_id && response && response.id) {
+      // This would be handled by a file update endpoint in a real implementation
+      // For now, we'll just return the response with the content_id added
+      return {
+        ...response,
+        content_id
+      };
     }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('content_files')
-      .getPublicUrl(filePath);
-
-    // Add to files table
-    const { data: fileData, error: fileError } = await supabase
-      .from('files')
-      .insert([
-        {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          path: filePath,
-          content_id: content_id || null,
-          user_id: user.id
-        }
-      ])
-      .select('*')
-      .single();
-
-    if (fileError) {
-      throw fileError;
-    }
-
+    
     toast.success('Datei erfolgreich hochgeladen');
-    return fileData;
+    return response;
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Hochladen der Datei');
     console.error('Error uploading file:', error);
@@ -96,19 +52,14 @@ export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileR
   }
 };
 
-// Get files associated with a content
+/**
+ * Get all files for a specific content
+ */
 export const getContentFiles = async (contentId: string): Promise<FileRecord[]> => {
   try {
-    const { data, error } = await supabase
-      .from('files')
-      .select('*')
-      .eq('content_id', contentId);
-
-    if (error) {
-      throw error;
-    }
-
-    return data || [];
+    // Query documents API with content_id filter
+    const files = await API.documents.list(`tags=content:${contentId}`);
+    return files || [];
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden der Dateien');
     console.error('Error fetching content files:', error);
@@ -116,34 +67,23 @@ export const getContentFiles = async (contentId: string): Promise<FileRecord[]> 
   }
 };
 
-// Get file URL
+/**
+ * Get file URL
+ */
 export const getFileUrl = (path: string): string => {
-  const { data } = supabase.storage.from('content_files').getPublicUrl(path);
-  return data.publicUrl;
+  // In a real implementation, this might be a call to an API endpoint
+  // For now, we'll just return a placeholder URL
+  return `/api/files/${path}`;
 };
 
-// Delete a file
+/**
+ * Delete a file
+ */
 export const deleteFile = async (id: string, path: string): Promise<boolean> => {
   try {
-    // Delete from storage
-    const { error: storageError } = await supabase.storage
-      .from('content_files')
-      .remove([path]);
-
-    if (storageError) {
-      throw storageError;
-    }
-
-    // Delete from database
-    const { error: dbError } = await supabase
-      .from('files')
-      .delete()
-      .eq('id', id);
-
-    if (dbError) {
-      throw dbError;
-    }
-
+    // Delete through documents API
+    await API.documents.delete(id);
+    
     toast.success('Datei erfolgreich gelöscht');
     return true;
   } catch (error: any) {
@@ -151,4 +91,31 @@ export const deleteFile = async (id: string, path: string): Promise<boolean> => 
     console.error('Error deleting file:', error);
     return false;
   }
+};
+
+/**
+ * Subscribe to file changes (placeholder for Supabase realtime)
+ * In the future, this could be replaced with WebSocket or polling
+ */
+export const subscribeToFiles = (contentId: string, callback: (payload: any) => void) => {
+  console.log('File subscription requested for content', contentId);
+  
+  // For now, just set up a simple interval to refresh the files
+  const intervalId = setInterval(async () => {
+    try {
+      const files = await getContentFiles(contentId);
+      callback({ 
+        eventType: 'REFRESH', 
+        new: files
+      });
+    } catch (error) {
+      console.error('Error in file subscription:', error);
+    }
+  }, 10000); // Poll every 10 seconds
+  
+  // Return unsubscribe function
+  return () => {
+    clearInterval(intervalId);
+    console.log('File subscription ended for content', contentId);
+  };
 };
