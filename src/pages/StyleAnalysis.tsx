@@ -1,14 +1,14 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Check, AlertCircle, X } from 'lucide-react';
+import { ArrowLeft, Sparkles, Check, AlertCircle, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import Navbar from '@/components/layout/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
+import { API } from '@/services/apiService';
+import { useAgentTask } from '@/hooks/use-agent-task';
 
 interface StyleMetric {
   name: string;
@@ -27,9 +27,12 @@ const StyleAnalysis = () => {
   const navigate = useNavigate();
   const [sampleText, setSampleText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<StyleResult | null>(null);
+  const [taskId, setTaskId] = useState<string | null>(null);
+  
+  // Use the agent task hook
+  const { result, status, error } = useAgentTask<StyleResult>(taskId);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (sampleText.trim().length < 100) {
       toast.error("Bitte geben Sie mindestens 100 Zeichen ein für eine genaue Analyse");
       return;
@@ -37,46 +40,30 @@ const StyleAnalysis = () => {
     
     setIsAnalyzing(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      // Mock result
-      const mockResult: StyleResult = {
-        metrics: [
-          { name: "Formalität", value: 65, label: "Formal" },
-          { name: "Technische Tiefe", value: 40, label: "Mittel" },
-          { name: "Persönlichkeit", value: 75, label: "Persönlich" },
-          { name: "Überzeugungskraft", value: 60, label: "Überzeugend" },
-        ],
-        guidelines: [
-          "Verwenden Sie persönliche Ansprache",
-          "Setzen Sie auf konkrete Beispiele",
-          "Halten Sie Sätze unter 20 Wörtern",
-          "Mischen Sie Fachbegriffe mit einfachen Erklärungen"
-        ],
-        strengths: [
-          "Gute Balance zwischen fachlich und zugänglich",
-          "Effektiver Einsatz von persönlicher Ansprache",
-          "Klare Struktur der Argumente"
-        ],
-        improvements: [
-          "Einige Sätze könnten kürzer sein",
-          "Mehr visuelle Sprachelemente verwenden",
-          "Technische Begriffe konsequenter erklären"
-        ]
-      };
+    try {
+      // Call the style analysis API
+      const response = await API.agents.styleAnalysis(sampleText);
       
-      setResult(mockResult);
+      // Get the task ID for polling
+      setTaskId(response.task_id);
+    } catch (err) {
+      console.error('Error starting style analysis:', err);
+      toast.error('Fehler bei der Stilanalyse');
       setIsAnalyzing(false);
-      toast.success("Stilanalyse abgeschlossen");
-    }, 2000);
+    }
   };
 
-  const handleSaveProfile = () => {
-    toast.success("Stilprofil gespeichert");
+  const handleSaveProfile = async () => {
+    if (result) {
+      // In a real implementation, this would save the style profile to the database
+      toast.success("Stilprofil gespeichert");
+    } else {
+      toast.error("Es gibt kein Stilprofil zum Speichern");
+    }
   };
 
   const handleReset = () => {
-    setResult(null);
+    setTaskId(null);
     setSampleText('');
   };
 
@@ -125,7 +112,7 @@ const StyleAnalysis = () => {
         </div>
         
         <div className="max-w-4xl mx-auto">
-          {!result ? (
+          {!result && status !== 'completed' ? (
             <Card className="bg-card dark:bg-[#1E1E1E]">
               <CardHeader>
                 <CardTitle>Stilanalyse durchführen</CardTitle>
@@ -139,6 +126,14 @@ const StyleAnalysis = () => {
                   placeholder="Fügen Sie hier einen Beispieltext ein (mindestens 100 Zeichen)..."
                 />
               </CardContent>
+              <CardFooter>
+                {isAnalyzing && status !== 'completed' && status !== 'failed' && (
+                  <div className="w-full text-center">
+                    <Loader2 className="h-8 w-8 mx-auto mb-2 animate-spin text-primary" />
+                    <p className="text-muted-foreground">Analyse läuft, bitte warten...</p>
+                  </div>
+                )}
+              </CardFooter>
             </Card>
           ) : (
           <div className="animate-fade-in">
@@ -152,7 +147,7 @@ const StyleAnalysis = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {result.metrics.map((metric) => (
+                    {result?.metrics.map((metric) => (
                       <div key={metric.name} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="font-medium">{metric.name}</span>
@@ -174,7 +169,7 @@ const StyleAnalysis = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {result.guidelines.map((guideline, index) => (
+                    {result?.guidelines.map((guideline, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <Check className="h-5 w-5 text-status-completed mt-0.5 flex-shrink-0" />
                         <span>{guideline}</span>
@@ -192,7 +187,7 @@ const StyleAnalysis = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {result.strengths.map((strength, index) => (
+                    {result?.strengths.map((strength, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <Check className="h-5 w-5 text-status-completed mt-0.5 flex-shrink-0" />
                         <span>{strength}</span>
@@ -208,7 +203,7 @@ const StyleAnalysis = () => {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {result.improvements.map((improvement, index) => (
+                    {result?.improvements.map((improvement, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <AlertCircle className="h-5 w-5 text-status-feedback mt-0.5 flex-shrink-0" />
                         <span>{improvement}</span>
