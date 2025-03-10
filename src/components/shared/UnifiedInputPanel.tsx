@@ -1,138 +1,173 @@
-
+// src/components/shared/UnifiedInputPanel.tsx
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileUp, Link, Type } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { FileText, Link, Upload } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 interface UnifiedInputPanelProps {
   onSubmit: (data: { type: 'text' | 'link' | 'file'; content: string | File }) => void;
   placeholder?: string;
+  allowedFileTypes?: string[];
+  submitButtonText?: string;
 }
 
-const UnifiedInputPanel = ({ onSubmit, placeholder = "Fügen Sie hier Ihren Text ein..." }: UnifiedInputPanelProps) => {
-  const [text, setText] = useState('');
-  const [url, setUrl] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string>('');
+const UnifiedInputPanel: React.FC<UnifiedInputPanelProps> = ({
+  onSubmit,
+  placeholder = 'Fügen Sie hier Ihren Text ein...',
+  allowedFileTypes = ['.pdf', '.docx', '.doc', '.txt', '.md', '.csv', '.xlsx', '.xls'],
+  submitButtonText = 'Absenden'
+}) => {
+  const [activeTab, setActiveTab] = useState<string>('text');
+  const [textContent, setTextContent] = useState('');
+  const [linkContent, setLinkContent] = useState('');
+  const [fileContent, setFileContent] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleTextSubmit = () => {
-    if (text.trim()) {
-      onSubmit({ type: 'text', content: text });
-      setPreview(text.substring(0, 100) + '...');
+  const handleSubmit = () => {
+    setIsSubmitting(true);
+    
+    try {
+      switch (activeTab) {
+        case 'text':
+          if (!textContent.trim()) {
+            toast.error('Bitte geben Sie einen Text ein');
+            return;
+          }
+          onSubmit({ type: 'text', content: textContent });
+          setTextContent('');
+          break;
+          
+        case 'link':
+          if (!linkContent.trim()) {
+            toast.error('Bitte geben Sie einen Link ein');
+            return;
+          }
+          
+          // Basic URL validation
+          try {
+            new URL(linkContent);
+            onSubmit({ type: 'link', content: linkContent });
+            setLinkContent('');
+          } catch (e) {
+            toast.error('Bitte geben Sie eine gültige URL ein');
+            return;
+          }
+          break;
+          
+        case 'file':
+          if (!fileContent) {
+            toast.error('Bitte wählen Sie eine Datei aus');
+            return;
+          }
+          onSubmit({ type: 'file', content: fileContent });
+          setFileContent(null);
+          break;
+      }
+    } catch (error) {
+      console.error('Error submitting content:', error);
+      toast.error('Ein Fehler ist aufgetreten');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleUrlSubmit = () => {
-    if (url.trim()) {
-      onSubmit({ type: 'link', content: url });
-      setPreview(`Link: ${url}`);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Die Datei ist zu groß. Maximale Größe: 5MB');
+        return;
+      }
+      
+      // Check file type
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      if (fileExtension && !allowedFileTypes.includes(`.${fileExtension}`)) {
+        toast.error(`Dieser Dateityp wird nicht unterstützt. Erlaubte Typen: ${allowedFileTypes.join(', ')}`);
+        return;
+      }
+      
+      setFileContent(file);
     }
-  };
-
-  const handleFileSubmit = (file: File) => {
-    onSubmit({ type: 'file', content: file });
-    setPreview(`Datei: ${file.name}`);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      setFile(droppedFile);
-      handleFileSubmit(droppedFile);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
   };
 
   return (
-    <Card className="w-full shadow-card animate-fade-in bg-card dark:bg-[#1E1E1E]">
-      <CardContent className="p-6">
-        <Tabs defaultValue="text" className="w-full">
-          <TabsList className="w-full justify-start mb-4">
-            <TabsTrigger value="text" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Text eingeben
-            </TabsTrigger>
-            <TabsTrigger value="link" className="flex items-center gap-2">
-              <Link className="h-4 w-4" />
-              Link einfügen
-            </TabsTrigger>
-            <TabsTrigger value="file" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Datei hochladen
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="text" className="mt-0">
-            <Textarea
-              placeholder={placeholder}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="min-h-[200px] mb-4"
-            />
-            <Button onClick={handleTextSubmit} className="w-full">Analysieren</Button>
-          </TabsContent>
-
-          <TabsContent value="link" className="mt-0">
-            <Input
-              type="url"
-              placeholder="https://example.com"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="mb-4"
-            />
-            <Button onClick={handleUrlSubmit} className="w-full">Link analysieren</Button>
-          </TabsContent>
-
-          <TabsContent value="file" className="mt-0">
-            <div
-              className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer mb-4"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-muted-foreground mb-2">
-                Datei hier ablegen oder klicken zum Auswählen
-              </p>
+    <div className="bg-card rounded-lg border border-border/40 overflow-hidden shadow-sm">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="border-b border-border/30 w-full rounded-none justify-start">
+          <TabsTrigger value="text" className="flex items-center gap-1.5">
+            <Type className="h-4 w-4" />
+            Text
+          </TabsTrigger>
+          <TabsTrigger value="link" className="flex items-center gap-1.5">
+            <Link className="h-4 w-4" />
+            Link
+          </TabsTrigger>
+          <TabsTrigger value="file" className="flex items-center gap-1.5">
+            <FileUp className="h-4 w-4" />
+            Datei
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="text" className="p-4">
+          <Textarea
+            placeholder={placeholder}
+            value={textContent}
+            onChange={(e) => setTextContent(e.target.value)}
+            className="min-h-40 mb-4"
+          />
+          <Button onClick={handleSubmit} disabled={isSubmitting || !textContent.trim()}>
+            {isSubmitting ? 'Wird verarbeitet...' : submitButtonText}
+          </Button>
+        </TabsContent>
+        
+        <TabsContent value="link" className="p-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="link-input">URL eingeben</Label>
               <Input
-                type="file"
-                className="hidden"
-                id="file-upload"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setFile(file);
-                    handleFileSubmit(file);
-                  }
-                }}
+                id="link-input"
+                placeholder="https://beispiel.com/artikel"
+                value={linkContent}
+                onChange={(e) => setLinkContent(e.target.value)}
               />
             </div>
-            <Button 
-              onClick={() => {
-                const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-                if (fileInput) fileInput.click();
-              }}
-              className="w-full"
-            >
-              Datei auswählen
+            <Button onClick={handleSubmit} disabled={isSubmitting || !linkContent.trim()}>
+              {isSubmitting ? 'Wird verarbeitet...' : submitButtonText}
             </Button>
-          </TabsContent>
-        </Tabs>
-
-        {preview && (
-          <div className="mt-4 p-4 rounded-lg bg-muted/50">
-            <p className="text-sm text-muted-foreground">Vorschau:</p>
-            <p className="mt-1">{preview}</p>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </TabsContent>
+        
+        <TabsContent value="file" className="p-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="file-input">Datei hochladen</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="file-input"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept={allowedFileTypes.join(',')}
+                />
+              </div>
+              {fileContent && (
+                <p className="text-sm text-muted-foreground">
+                  Ausgewählte Datei: {fileContent.name} ({(fileContent.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
+            </div>
+            <Button onClick={handleSubmit} disabled={isSubmitting || !fileContent}>
+              {isSubmitting ? 'Wird verarbeitet...' : submitButtonText}
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
