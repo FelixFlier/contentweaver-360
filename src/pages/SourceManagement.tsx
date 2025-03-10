@@ -1,6 +1,6 @@
-
-import React, { useState } from 'react';
-import { Lightbulb, Plus, ExternalLink, Trash2, BookmarkIcon, Check, ArrowLeft, X } from 'lucide-react';
+// src/pages/SourceManagement.tsx
+import React, { useState, useEffect } from 'react';
+import { Lightbulb, Plus, ExternalLink, Trash2, BookmarkIcon, Check, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
+import { API } from '@/services/apiService';
 
 type Source = {
   id: string;
@@ -22,39 +23,13 @@ type Source = {
   date?: string;
   type: 'article' | 'book' | 'study' | 'website';
   tags: string[];
+  quality?: string;
+  content?: string;
 };
 
 const SourceManagement = () => {
   const navigate = useNavigate();
-  const [sources, setSources] = useState<Source[]>([
-    {
-      id: '1',
-      title: 'KI im Content Marketing: Strategien für 2023',
-      url: 'https://example.com/ai-content-marketing',
-      author: 'Maria Schmidt',
-      date: '15.03.2023',
-      type: 'article',
-      tags: ['KI', 'Marketing', 'Content']
-    },
-    {
-      id: '2',
-      title: 'Digitale Transformation: Herausforderungen und Chancen',
-      url: 'https://example.com/digital-transformation',
-      author: 'Thomas Weber',
-      date: '22.05.2023',
-      type: 'study',
-      tags: ['Digital', 'Transformation', 'Business']
-    },
-    {
-      id: '3',
-      title: 'Content-Strategie für B2B-Unternehmen',
-      url: 'https://example.com/b2b-content',
-      author: 'Sarah Müller',
-      date: '07.04.2023',
-      type: 'article',
-      tags: ['B2B', 'Strategie', 'Content']
-    }
-  ]);
+  const [sources, setSources] = useState<Source[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [newSource, setNewSource] = useState<Partial<Source>>({
     title: '',
@@ -66,30 +41,53 @@ const SourceManagement = () => {
   const [newTag, setNewTag] = useState('');
   const [isAddingSource, setIsAddingSource] = useState(false);
   const [showInputPanel, setShowInputPanel] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAddSource = () => {
+  useEffect(() => {
+    // Lade Quellen beim Seitenaufruf
+    fetchSources();
+  }, []);
+
+  const fetchSources = async () => {
+    setIsLoading(true);
+    try {
+      const sourcesList = await API.sources.list();
+      setSources(sourcesList);
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+      toast.error('Fehler beim Laden der Quellen');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddSource = async () => {
     if (!newSource.title || !newSource.url || !newSource.type) return;
     
-    const source: Source = {
-      id: Date.now().toString(),
-      title: newSource.title,
-      url: newSource.url,
-      author: newSource.author || undefined,
-      date: new Date().toLocaleDateString('de-DE'),
-      type: newSource.type as 'article' | 'book' | 'study' | 'website',
-      tags: newSource.tags || []
-    };
-    
-    setSources([...sources, source]);
-    setNewSource({
-      title: '',
-      url: '',
-      author: '',
-      type: 'article',
-      tags: []
-    });
-    setIsAddingSource(false);
-    toast.success('Quelle erfolgreich hinzugefügt');
+    try {
+      // API-Aufruf zum Hinzufügen einer Quelle
+      const source = await API.sources.addUrl(
+        newSource.url || '', 
+        newSource.title,
+        true // Extract now
+      );
+      
+      if (source) {
+        setSources(prev => [...prev, source as Source]);
+        setNewSource({
+          title: '',
+          url: '',
+          author: '',
+          type: 'article',
+          tags: []
+        });
+        setIsAddingSource(false);
+        toast.success('Quelle erfolgreich hinzugefügt');
+      }
+    } catch (error) {
+      console.error('Error adding source:', error);
+      toast.error('Fehler beim Hinzufügen der Quelle');
+    }
   };
 
   const handleAddTag = () => {
@@ -108,18 +106,29 @@ const SourceManagement = () => {
     });
   };
 
-  const handleRemoveSource = (id: string) => {
-    setSources(sources.filter(source => source.id !== id));
-    toast.success('Quelle erfolgreich entfernt');
+  const handleRemoveSource = async (id: string) => {
+    try {
+      // API-Aufruf zum Löschen einer Quelle
+      const success = await API.sources.delete(id);
+      
+      if (success) {
+        setSources(sources.filter(source => source.id !== id));
+        toast.success('Quelle erfolgreich entfernt');
+      }
+    } catch (error) {
+      console.error('Error removing source:', error);
+      toast.error('Fehler beim Entfernen der Quelle');
+    }
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
+    // In einer realen Implementierung würde hier ein Batch-Update durchgeführt
     toast.success('Alle Quellen wurden gespeichert');
   };
 
-  const handleInputSubmit = (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
+  const handleInputSubmit = async (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
     if (data.type === 'text') {
-      // Parse text content to extract potential source information
+      // Text-Inhalt parsen, um potenzielle Quelleninformationen zu extrahieren
       const content = data.content as string;
       const lines = content.split('\n');
       
@@ -128,7 +137,7 @@ const SourceManagement = () => {
         let url = '';
         let author = '';
         
-        // Try to extract URL and author from text
+        // Versuche, URL und Autor aus dem Text zu extrahieren
         lines.forEach(line => {
           if (line.startsWith('http') || line.includes('www.')) {
             url = line.trim();
@@ -137,23 +146,40 @@ const SourceManagement = () => {
           }
         });
         
-        setNewSource({
-          ...newSource,
-          title,
-          url,
-          author
-        });
-        
-        setIsAddingSource(true);
-        toast.info('Quelleninformationen extrahiert. Bitte überprüfen und ergänzen Sie die Daten.');
+        try {
+          // Füge Text als Quelle hinzu
+          const source = await API.sources.addText(
+            content,
+            title || 'Unbenannte Quelle',
+            'manual'
+          );
+          
+          if (source) {
+            setSources(prev => [...prev, source as Source]);
+            toast.success('Quelle erfolgreich hinzugefügt');
+          }
+        } catch (error) {
+          console.error('Error adding text source:', error);
+          toast.error('Fehler beim Hinzufügen der Textquelle');
+        }
       }
     } else if (data.type === 'link') {
-      setNewSource({
-        ...newSource,
-        url: data.content as string,
-        title: 'Neue Quelle von ' + new URL(data.content as string).hostname
-      });
-      setIsAddingSource(true);
+      try {
+        // Füge URL als Quelle hinzu
+        const source = await API.sources.addUrl(
+          data.content as string,
+          new URL(data.content as string).hostname, // Standardtitel aus Hostnamen
+          true // Extract now
+        );
+        
+        if (source) {
+          setSources(prev => [...prev, source as Source]);
+          toast.success('Quelle erfolgreich hinzugefügt');
+        }
+      } catch (error) {
+        console.error('Error adding url source:', error);
+        toast.error('Fehler beim Hinzufügen der URL-Quelle');
+      }
     } else {
       toast.info('Diese Funktion wird bald verfügbar sein');
     }
@@ -362,54 +388,34 @@ const SourceManagement = () => {
               </Card>
             )}
             
-            <Tabs defaultValue="all">
-              <TabsList className="mb-4">
-                <TabsTrigger value="all">Alle</TabsTrigger>
-                <TabsTrigger value="article">Artikel ({sourcesByType.article.length})</TabsTrigger>
-                <TabsTrigger value="study">Studien ({sourcesByType.study.length})</TabsTrigger>
-                <TabsTrigger value="book">Bücher ({sourcesByType.book.length})</TabsTrigger>
-                <TabsTrigger value="website">Webseiten ({sourcesByType.website.length})</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="all">
-                {filteredSources.length === 0 ? (
-                  <Card className="bg-card dark:bg-[#1E1E1E]">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Lightbulb className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
-                      <p className="text-muted-foreground text-center">
-                        Keine Quellen gefunden. Erstellen Sie eine neue Quelle mit dem "Neue Quelle" Button.
-                      </p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {filteredSources.map((source) => (
-                      <SourceCard 
-                        key={source.id} 
-                        source={source} 
-                        onRemove={handleRemoveSource} 
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              {Object.entries(sourcesByType).map(([type, sources]) => (
-                <TabsContent key={type} value={type}>
-                  {sources.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
+                <span className="ml-3 text-muted-foreground">Quellen werden geladen...</span>
+              </div>
+            ) : (
+              <Tabs defaultValue="all">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="all">Alle</TabsTrigger>
+                  <TabsTrigger value="article">Artikel ({sourcesByType.article.length})</TabsTrigger>
+                  <TabsTrigger value="study">Studien ({sourcesByType.study.length})</TabsTrigger>
+                  <TabsTrigger value="book">Bücher ({sourcesByType.book.length})</TabsTrigger>
+                  <TabsTrigger value="website">Webseiten ({sourcesByType.website.length})</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="all">
+                  {filteredSources.length === 0 ? (
                     <Card className="bg-card dark:bg-[#1E1E1E]">
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <Lightbulb className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
                         <p className="text-muted-foreground text-center">
-                          Keine {type === 'article' ? 'Artikel' : 
-                                  type === 'study' ? 'Studien' : 
-                                  type === 'book' ? 'Bücher' : 'Webseiten'} gefunden.
+                          Keine Quellen gefunden. Erstellen Sie eine neue Quelle mit dem "Neue Quelle" Button.
                         </p>
                       </CardContent>
                     </Card>
                   ) : (
                     <div className="grid grid-cols-1 gap-4">
-                      {sources.map((source) => (
+                      {filteredSources.map((source) => (
                         <SourceCard 
                           key={source.id} 
                           source={source} 
@@ -419,8 +425,35 @@ const SourceManagement = () => {
                     </div>
                   )}
                 </TabsContent>
-              ))}
-            </Tabs>
+                
+                {Object.entries(sourcesByType).map(([type, sources]) => (
+                  <TabsContent key={type} value={type}>
+                    {sources.length === 0 ? (
+                      <Card className="bg-card dark:bg-[#1E1E1E]">
+                        <CardContent className="flex flex-col items-center justify-center py-12">
+                          <Lightbulb className="h-12 w-12 text-muted-foreground opacity-50 mb-4" />
+                          <p className="text-muted-foreground text-center">
+                            Keine {type === 'article' ? 'Artikel' : 
+                                    type === 'study' ? 'Studien' : 
+                                    type === 'book' ? 'Bücher' : 'Webseiten'} gefunden.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {sources.map((source) => (
+                          <SourceCard 
+                            key={source.id} 
+                            source={source} 
+                            onRemove={handleRemoveSource} 
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
           </div>
         </section>
       </main>
@@ -451,7 +484,7 @@ const SourceCard = ({ source, onRemove }: { source: Source; onRemove: (id: strin
       </CardHeader>
       <CardContent className="pb-2">
         <div className="flex flex-wrap gap-2 mb-3">
-          {source.tags.map((tag) => (
+          {source.tags && source.tags.map((tag) => (
             <Badge key={tag} variant="outline">{tag}</Badge>
           ))}
         </div>
