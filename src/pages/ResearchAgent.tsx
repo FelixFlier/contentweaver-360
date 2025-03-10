@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Search, BookOpen, FileCheck, BookmarkIcon, ArrowLeft, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, BookOpen, FileCheck, BookmarkIcon, ArrowLeft, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -10,54 +9,76 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
+import { API } from '@/services/apiService';
+import { useAgentTask } from '@/hooks/use-agent-task';
+
+interface ResearchResult {
+  sources: any[];
+  summary: string;
+  key_points: string[];
+  statistics: any[];
+  keywords: string[];
+}
 
 const ResearchAgent = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [taskId, setTaskId] = useState<string | null>(null);
 
-  // Mock research results
-  const mockResults = [
-    {
-      id: '1',
-      title: 'KI im Marketing: Eine Analyse der aktuellen Trends',
-      source: 'Wirtschaftswoche',
-      date: '12.05.2023',
-      excerpt: 'Die Studie zeigt, dass 78% der Unternehmen KI-Tools für Content-Erstellung nutzen...',
-      type: 'article',
-      url: '#'
-    },
-    {
-      id: '2',
-      title: 'Statistiken zur digitalen Transformation 2023',
-      source: 'Statista',
-      date: '03.07.2023',
-      excerpt: 'Die digitale Transformation hat in den letzten zwei Jahren um 45% zugenommen...',
-      type: 'statistics',
-      url: '#'
-    },
-    {
-      id: '3',
-      title: 'Zukunftstrends im Content Marketing',
-      source: 'Marketing Journal',
-      date: '21.03.2023',
-      excerpt: 'Personalisierung und KI-generierte Inhalte dominieren die Content-Strategien von Vorreitern...',
-      type: 'article',
-      url: '#'
+  // Use the agent task hook
+  const { result, status, error } = useAgentTask<ResearchResult>(taskId);
+
+  // Update state when result changes
+  useEffect(() => {
+    if (result) {
+      // Convert research results to searchResults format
+      const formattedResults = result.sources?.map((source, index) => ({
+        id: source.id || `result-${index}`,
+        title: source.title || 'Unnamed Source',
+        source: source.domain || source.author || 'Unknown',
+        date: source.date_published || 'Unknown date',
+        excerpt: source.content_summary || source.snippet || 'No excerpt available',
+        type: source.source_type || 'article',
+        url: source.url || '#'
+      })) || [];
+      
+      setSearchResults(formattedResults);
+      setIsSearching(false);
     }
-  ];
+  }, [result]);
 
-  const handleSearch = () => {
+  // Update state when status changes
+  useEffect(() => {
+    if (status === 'failed') {
+      toast.error('Research fehlgeschlagen: ' + (error || 'Unbekannter Fehler'));
+      setIsSearching(false);
+    }
+  }, [status, error]);
+
+  const handleSearch = async () => {
     if (searchQuery.trim() === '') return;
     
     setIsSearching(true);
+    setSearchResults([]);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      setSearchResults(mockResults);
+    try {
+      // Call the research agent
+      const response = await API.agents.research(
+        searchQuery,  // topic
+        searchQuery,  // search_queries
+        [],           // sourceIds 
+        []            // urls
+      );
+      
+      // Get the task ID for polling
+      setTaskId(response.task_id);
+    } catch (err) {
+      console.error('Error starting research:', err);
+      toast.error('Fehler bei der Recherche');
       setIsSearching(false);
-    }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -75,11 +96,25 @@ const ResearchAgent = () => {
     }
   };
 
-  const handleSave = () => {
-    if (searchResults.length > 0) {
-      toast.success('Rechercheergebnisse wurden gespeichert');
-    } else {
-      toast.error('Keine Ergebnisse zum Speichern vorhanden');
+  const handleSave = async (result?: any) => {
+    try {
+      if (searchResults.length > 0) {
+        // Save research results
+        // In a real implementation, you would save to the database
+        // For now, we'll just show a success message
+        toast.success('Rechercheergebnisse wurden gespeichert');
+        
+        // If a specific result was provided, save that as a source
+        if (result) {
+          await API.sources.addUrl(result.url, result.title);
+          toast.success(`Quelle "${result.title}" gespeichert`);
+        }
+      } else {
+        toast.error('Keine Ergebnisse zum Speichern vorhanden');
+      }
+    } catch (error) {
+      console.error('Error saving results:', error);
+      toast.error('Fehler beim Speichern der Ergebnisse');
     }
   };
 
@@ -152,7 +187,7 @@ const ResearchAgent = () => {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={handleSave}
+                  onClick={() => handleSave()}
                   disabled={searchResults.length === 0}
                   className="w-full ml-2"
                 >
@@ -164,7 +199,7 @@ const ResearchAgent = () => {
             {isSearching && (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-pulse text-center">
-                  <Search className="h-12 w-12 mx-auto mb-4 text-primary opacity-50" />
+                  <Loader2 className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
                   <p className="text-muted-foreground">Suche läuft, bitte warten...</p>
                 </div>
               </div>
@@ -202,11 +237,21 @@ const ResearchAgent = () => {
                           <p className="text-muted-foreground">{result.excerpt}</p>
                         </CardContent>
                         <CardFooter className="flex justify-between pt-0">
-                          <Button variant="ghost" size="sm" className="gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="gap-1"
+                            onClick={() => window.open(result.url, '_blank')}
+                          >
                             <BookOpen className="h-4 w-4" />
                             Lesen
                           </Button>
-                          <Button variant="ghost" size="sm" className="gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="gap-1"
+                            onClick={() => handleSave(result)}
+                          >
                             <BookmarkIcon className="h-4 w-4" />
                             Speichern
                           </Button>
@@ -245,7 +290,12 @@ const ResearchAgent = () => {
                               <BookOpen className="h-4 w-4" />
                               Lesen
                             </Button>
-                            <Button variant="ghost" size="sm" className="gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => handleSave(result)}
+                            >
                               <BookmarkIcon className="h-4 w-4" />
                               Speichern
                             </Button>
@@ -284,7 +334,12 @@ const ResearchAgent = () => {
                               <BookOpen className="h-4 w-4" />
                               Lesen
                             </Button>
-                            <Button variant="ghost" size="sm" className="gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="gap-1"
+                              onClick={() => handleSave(result)}
+                            >
                               <BookmarkIcon className="h-4 w-4" />
                               Speichern
                             </Button>
