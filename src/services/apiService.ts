@@ -1,11 +1,11 @@
-// src/services/apiService.ts - Vollständige Datei
-
+// src/services/apiService.ts
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Base API URL - adjust to your actual backend URL
-// Für Production/Vercel: const API_BASE = '/api/v1';
-const API_BASE = 'http://localhost:8000/api/v1';
+// Base API URL - angepasst für Vercel-Deployment mit Umgebungsvariablen
+const API_BASE = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api/v1` 
+  : 'http://localhost:8000/api/v1';
 
 interface ApiOptions {
   method?: string;
@@ -13,6 +13,42 @@ interface ApiOptions {
   headers?: Record<string, string>;
   isFormData?: boolean;
 }
+
+// Mock-Daten für Testmodus
+const mockData = {
+  // Agent-Tasks
+  tasks: {
+    "mock-task-1": {
+      id: "mock-task-1",
+      status: "completed",
+      result: {
+        score: 85,
+        suggestions: [
+          {
+            id: "suggestion-1",
+            type: "success",
+            title: "Gute Keyword-Dichte",
+            description: "Die Keyword-Dichte Ihres Inhalts ist optimal."
+          },
+          {
+            id: "suggestion-2",
+            type: "warning",
+            title: "Title-Tag optimieren",
+            description: "Ihr Title-Tag könnte verbessert werden, um relevanter für Suchmaschinen zu sein."
+          },
+          {
+            id: "suggestion-3",
+            type: "info",
+            title: "Meta-Beschreibung hinzufügen",
+            description: "Fügen Sie eine aussagekräftige Meta-Beschreibung hinzu."
+          }
+        ],
+        article: "Ihr optimierter Text...",
+        keywords: ["SEO", "Content Marketing", "Optimierung"]
+      }
+    }
+  }
+};
 
 // Core API fetch function with auth
 export const fetchAPI = async (endpoint: string, options: ApiOptions = {}) => {
@@ -24,6 +60,24 @@ export const fetchAPI = async (endpoint: string, options: ApiOptions = {}) => {
   } = options;
 
   try {
+    // Testmodus aktivieren, wenn VITE_TEST_MODE gesetzt ist
+    if (import.meta.env.VITE_TEST_MODE === 'true') {
+      console.log(`[TEST MODE] API call to ${endpoint}`);
+      
+      // Verzögerung simulieren
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Spezielle Endpunkte für Testdaten
+      if (endpoint.includes('/agents/tasks/mock-task')) {
+        return mockData.tasks["mock-task-1"];
+      }
+      
+      // Für SEO-Optimierung einen Mock-Task erstellen
+      if (endpoint.includes('/agents/seo-optimize')) {
+        return { task_id: "mock-task-1" };
+      }
+    }
+    
     // Get current session from Supabase
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -36,9 +90,9 @@ export const fetchAPI = async (endpoint: string, options: ApiOptions = {}) => {
     // Add auth token if available
     if (session?.access_token) {
       requestHeaders['Authorization'] = `Bearer ${session.access_token}`;
-    } else {
-      // ENTWICKLUNGSMODUS: Mock-Token für einfachere Tests
-      requestHeaders['Authorization'] = `Bearer mock_token_for_development`;
+    } else if (import.meta.env.VITE_TEST_MODE === 'true') {
+      // Im Testmodus einen Mock-Token verwenden
+      requestHeaders['Authorization'] = `Bearer mock_token_for_test_mode`;
     }
 
     // Add content type for non-FormData requests
@@ -69,7 +123,9 @@ export const fetchAPI = async (endpoint: string, options: ApiOptions = {}) => {
       } catch (e) {
         errorData = { detail: errorText };
       }
-      throw new Error(errorData.detail || 'Ein Fehler ist aufgetreten');
+      
+      const errorMessage = errorData.detail || errorData.message || 'Ein Fehler ist aufgetreten';
+      throw new Error(errorMessage);
     }
 
     // Parse response
@@ -80,7 +136,22 @@ export const fetchAPI = async (endpoint: string, options: ApiOptions = {}) => {
     
     return response.text();
   } catch (error: any) {
-    console.error('API request failed:', error);
+    // Im Testmodus Fehler nutzerfreundlich behandeln
+    if (import.meta.env.VITE_TEST_MODE === 'true') {
+      console.warn('API request failed in test mode:', error);
+      
+      // Bei Verbindungsfehlern im Testmodus eine Benachrichtigung anzeigen
+      if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
+        toast.info('Backend nicht erreichbar. Test-Modus aktiviert.');
+        
+        // Für SEO-Optimierung einen Mock-Task zurückgeben
+        if (endpoint.includes('/agents/seo-optimize')) {
+          return { task_id: "mock-task-1" };
+        }
+      }
+    } else {
+      console.error('API request failed:', error);
+    }
     throw error;
   }
 };
