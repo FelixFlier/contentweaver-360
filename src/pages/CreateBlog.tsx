@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -74,17 +73,26 @@ const CreateBlog = () => {
     
     setIsSubmitting(true);
     
-    const content = await createContent({
-      title,
-      description,
-      type: contentType,
-      styleId
-    });
-    
-    setIsSubmitting(false);
-    
-    if (content) {
-      navigate('/content');
+    try {
+      // Call the contentService which now uses the API
+      const content = await createContent({
+        title,
+        description,
+        type: contentType,
+        styleId
+      });
+      
+      if (content) {
+        toast.success(`${contentType === 'blog' ? 'Blog-Artikel' : 'LinkedIn-Post'} erfolgreich erstellt`);
+        navigate('/content');
+      } else {
+        throw new Error('Failed to create content');
+      }
+    } catch (error) {
+      console.error('Error creating content:', error);
+      toast.error('Fehler beim Erstellen des Inhalts');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
