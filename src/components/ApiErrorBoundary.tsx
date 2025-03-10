@@ -1,3 +1,4 @@
+// src/components/ApiErrorBoundary.tsx
 import React, { useState, useEffect, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -17,8 +18,7 @@ const ApiErrorBoundary: React.FC<ApiErrorBoundaryProps> = ({ children }) => {
       const response = await fetch(`${apiUrl}/api/v1/health`, { 
         method: 'GET',
         headers: { 'Accept': 'application/json' },
-        // Verhindern, dass der Request ewig hängt
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(5000) // 5 second timeout
       });
       
       setIsBackendAvailable(response.ok);
