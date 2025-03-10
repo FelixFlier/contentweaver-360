@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TrendingUp, CheckCircle, AlertCircle, Sparkles, MoveUp, ArrowLeft, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import UnifiedInputPanel from '@/components/shared/UnifiedInputPanel';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { API } from '@/services/apiService';
+import { useAgentTask } from '@/hooks/use-agent-task';
 
 type SeoSuggestion = {
   id: string;
@@ -19,6 +20,15 @@ type SeoSuggestion = {
   description: string;
 };
 
+interface SeoResult {
+  score: number;
+  suggestions: SeoSuggestion[];
+  article: string;
+  title?: string;
+  meta_description?: string;
+  keywords?: string[];
+}
+
 const SeoOptimizer = () => {
   const navigate = useNavigate();
   const [content, setContent] = useState('');
@@ -26,50 +36,48 @@ const SeoOptimizer = () => {
   const [seoScore, setSeoScore] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<SeoSuggestion[]>([]);
+  const [taskId, setTaskId] = useState<string | null>(null);
 
-  const mockSuggestions: SeoSuggestion[] = [
-    {
-      id: '1',
-      type: 'success',
-      title: 'Gute Keyword-Dichte',
-      description: 'Die Hauptkeywords werden in einer optimalen Häufigkeit verwendet.'
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'Meta-Beschreibung optimieren',
-      description: 'Die Meta-Beschreibung könnte präziser formuliert werden, um mehr Klicks zu generieren.'
-    },
-    {
-      id: '3',
-      type: 'info',
-      title: 'Interne Verlinkung',
-      description: 'Fügen Sie mehr interne Links hinzu, um die Vernetzung und Autorität zu verbessern.'
-    },
-    {
-      id: '4',
-      type: 'warning',
-      title: 'Längere Überschriften',
-      description: 'Ihre H2-Überschriften könnten etwas länger sein, um mehr Keywords zu enthalten.'
-    },
-    {
-      id: '5',
-      type: 'success',
-      title: 'Gut strukturierter Content',
-      description: 'Der Inhalt ist logisch gegliedert und leicht zu lesen.'
+  // Use the agent task hook
+  const { result, status, error } = useAgentTask<SeoResult>(taskId);
+
+  // Update state when result changes
+  React.useEffect(() => {
+    if (result) {
+      setSeoScore(result.score);
+      setSuggestions(result.suggestions || []);
+      setIsAnalyzing(false);
     }
-  ];
+  }, [result]);
 
-  const handleAnalyze = () => {
+  // Update state when status changes
+  React.useEffect(() => {
+    if (status === 'failed') {
+      toast.error('SEO-Analyse fehlgeschlagen');
+      setIsAnalyzing(false);
+    }
+  }, [status]);
+
+  const handleAnalyze = async () => {
     if (content.trim() === '') return;
     
     setIsAnalyzing(true);
     
-    setTimeout(() => {
-      setSeoScore(78);
-      setSuggestions(mockSuggestions);
+    try {
+      // Call the SEO optimization agent
+      const response = await API.agents.seoOptimize(
+        content, 
+        'SEO Analysis', // topic
+        keywords // additional keywords
+      );
+      
+      // Get the task ID for polling
+      setTaskId(response.task_id);
+    } catch (err) {
+      console.error('Error analyzing SEO:', err);
+      toast.error('Fehler bei der SEO-Analyse');
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   const handleInputSubmit = (data: { type: 'text' | 'link' | 'file'; content: string | File }) => {
@@ -278,6 +286,10 @@ const SeoOptimizer = () => {
         </section>
       </main>
     </div>
+  );
+};
+
+export default SeoOptimizer;
   );
 };
 
