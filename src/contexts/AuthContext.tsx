@@ -50,26 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(data.session.user);
         localStorage.setItem('isLoggedIn', 'true');
       } else {
-        // Für den Testmodus trotzdem angemeldet bleiben
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-          setUser({
-            id: 'test-user-id',
-            email: 'test@example.com',
-          });
-        } else {
-          setUser(null);
-        }
+        setUser(null);
+        localStorage.removeItem('isLoggedIn');
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      // Im Testmodus Fehler ignorieren
-      if (import.meta.env.VITE_TEST_MODE === 'true') {
-        localStorage.setItem('isLoggedIn', 'true');
-        setUser({
-          id: 'test-user-id',
-          email: 'test@example.com',
-        });
-      }
     } finally {
       setIsLoading(false);
     }
@@ -130,8 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) throw error;
-      
-      // In einer realen Implementierung könnte hier ein Profil erstellt werden
       
       toast.success('Registrierung erfolgreich! Bitte bestätigen Sie Ihre E-Mail-Adresse.');
       return data;
