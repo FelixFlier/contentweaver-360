@@ -1,5 +1,7 @@
+// src/services/fileService.ts
 import { API } from '@/services/apiService';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface FileRecord {
   id: string;
@@ -94,28 +96,46 @@ export const deleteFile = async (id: string, path: string): Promise<boolean> => 
 };
 
 /**
- * Subscribe to file changes (placeholder for Supabase realtime)
- * In the future, this could be replaced with WebSocket or polling
+ * Subscribe to file changes using Supabase Realtime
  */
 export const subscribeToFiles = (contentId: string, callback: (payload: any) => void) => {
-  console.log('File subscription requested for content', contentId);
-  
-  // For now, just set up a simple interval to refresh the files
-  const intervalId = setInterval(async () => {
-    try {
-      const files = await getContentFiles(contentId);
-      callback({ 
-        eventType: 'REFRESH', 
-        new: files
-      });
-    } catch (error) {
-      console.error('Error in file subscription:', error);
-    }
-  }, 10000); // Poll every 10 seconds
-  
-  // Return unsubscribe function
-  return () => {
-    clearInterval(intervalId);
-    console.log('File subscription ended for content', contentId);
-  };
+  if (import.meta.env.VITE_TEST_MODE === 'true') {
+    console.log('File subscription requested for content', contentId);
+    // Im Testmodus: Set up a simple interval to refresh the files
+    const intervalId = setInterval(async () => {
+      try {
+        const files = await getContentFiles(contentId);
+        callback({ 
+          eventType: 'REFRESH', 
+          new: files
+        });
+      } catch (error) {
+        console.error('Error in file subscription:', error);
+      }
+    }, 10000); // Poll every 10 seconds
+    
+    // Return unsubscribe function
+    return () => {
+      clearInterval(intervalId);
+      console.log('File subscription ended for content', contentId);
+    };
+  } else {
+    // Im Produktionsmodus: Echte Supabase Realtime Subscription verwenden
+    const channel = supabase
+      .channel(`files-${contentId}`)
+      .on('postgres_changes', {
+        event: '*', 
+        schema: 'public', 
+        table: 'files',
+        filter: `content_id=eq.${contentId}`
+      }, (payload) => {
+        callback(payload);
+      })
+      .subscribe();
+    
+    // Return unsubscribe function
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }
 };
