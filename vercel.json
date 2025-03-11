@@ -6,7 +6,7 @@
     "VITE_SUPABASE_URL": "https://zxhziuydweffrcwhoodd.supabase.co",
     "VITE_SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4aHppdXlkd2VmZnJjd2hvb2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0MjMxMzQsImV4cCI6MjA1Njk5OTEzNH0.CaW9Xkq6P2SLP1FrXsOpAoCqmybKchX5P3WzsEpSQ9U",
     "VITE_API_URL": "http://dein-backend-url-oder-localhost:8000",
-    "VITE_TEST_MODE": "true"
+    "VITE_TEST_MODE": "false"
   },
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
