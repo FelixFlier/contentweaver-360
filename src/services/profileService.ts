@@ -1,4 +1,4 @@
-
+// src/services/profileService.ts
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -21,13 +21,29 @@ export interface ProfileUpdateInput {
   avatar_url?: string;
 }
 
-// Get the user's profile
+/**
+ * Get the user's profile
+ */
 export const getUserProfile = async (): Promise<Profile | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       return null;
+    }
+
+    // Test mode
+    if (import.meta.env.VITE_TEST_MODE === 'true') {
+      return {
+        id: user.id,
+        name: "Test User",
+        email: user.email || "test@example.com",
+        bio: "This is a test user profile",
+        location: "Test Location",
+        joined_date: new Date().toISOString(),
+        avatar_url: null,
+        updated_at: new Date().toISOString()
+      };
     }
 
     const { data, error } = await supabase
@@ -47,13 +63,30 @@ export const getUserProfile = async (): Promise<Profile | null> => {
   }
 };
 
-// Update the user's profile
+/**
+ * Update the user's profile
+ */
 export const updateUserProfile = async (updates: ProfileUpdateInput): Promise<Profile | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error('Nicht angemeldet');
+    }
+
+    // Test mode
+    if (import.meta.env.VITE_TEST_MODE === 'true') {
+      toast.success('Profil aktualisiert (Testmodus)');
+      return {
+        id: user.id,
+        name: updates.name || "Test User",
+        email: updates.email || user.email || "test@example.com",
+        bio: updates.bio || "This is a test user profile",
+        location: updates.location || "Test Location",
+        joined_date: new Date().toISOString(),
+        avatar_url: updates.avatar_url || null,
+        updated_at: new Date().toISOString()
+      };
     }
 
     const { data, error } = await supabase
@@ -76,13 +109,26 @@ export const updateUserProfile = async (updates: ProfileUpdateInput): Promise<Pr
   }
 };
 
-// Upload avatar image
+/**
+ * Upload avatar image
+ */
 export const uploadAvatar = async (file: File): Promise<string | null> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error('Nicht angemeldet');
+    }
+
+    // Test mode
+    if (import.meta.env.VITE_TEST_MODE === 'true') {
+      const mockUrl = '/placeholder.svg';
+      toast.success('Avatar hochgeladen (Testmodus)');
+      
+      // Update profile with mock avatar URL
+      await updateUserProfile({ avatar_url: mockUrl });
+      
+      return mockUrl;
     }
 
     const fileExt = file.name.split('.').pop();
