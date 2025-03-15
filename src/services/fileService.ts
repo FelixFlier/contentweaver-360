@@ -37,12 +37,14 @@ export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileR
     
     // If content_id was provided, we need to update the file record
     if (content_id && response && response.id) {
-      // This would be handled by a file update endpoint in a real implementation
-      // For now, we'll just return the response with the content_id added
-      return {
-        ...response,
-        content_id
-      };
+      // Update the file with content_id
+      const formData = new FormData();
+      formData.append('content_id', content_id);
+      
+      const updated = await API.documents.update(response.id, formData);
+      if (updated) {
+        return updated;
+      }
     }
     
     toast.success('Datei erfolgreich hochgeladen');
@@ -60,7 +62,7 @@ export const uploadFile = async ({ file, content_id }: FileInput): Promise<FileR
 export const getContentFiles = async (contentId: string): Promise<FileRecord[]> => {
   try {
     // Query documents API with content_id filter
-    const files = await API.documents.list(`tags=content:${contentId}`);
+    const files = await API.documents.list(`content_id=${contentId}`);
     return files || [];
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden der Dateien');
@@ -70,12 +72,24 @@ export const getContentFiles = async (contentId: string): Promise<FileRecord[]> 
 };
 
 /**
- * Get file URL
+ * Get public file URL
  */
 export const getFileUrl = (path: string): string => {
-  // In a real implementation, this might be a call to an API endpoint
-  // For now, we'll just return a placeholder URL
-  return `/api/files/${path}`;
+  if (import.meta.env.VITE_TEST_MODE === 'true') {
+    // In test mode, return a placeholder image
+    return '/placeholder.svg';
+  }
+  
+  try {
+    // Get public URL from Supabase
+    const bucket = path.split('/')[0]; // Extract bucket name from path
+    const filePath = path.split('/').slice(1).join('/'); // Extract file path
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return data.publicUrl;
+  } catch (error) {
+    console.error('Error getting file URL:', error);
+    return '/placeholder.svg';
+  }
 };
 
 /**
@@ -83,7 +97,14 @@ export const getFileUrl = (path: string): string => {
  */
 export const deleteFile = async (id: string, path: string): Promise<boolean> => {
   try {
-    // Delete through documents API
+    // Delete from Supabase Storage
+    if (!import.meta.env.VITE_TEST_MODE) {
+      const bucket = path.split('/')[0]; // Extract bucket name from path
+      const filePath = path.split('/').slice(1).join('/'); // Extract file path
+      await supabase.storage.from(bucket).remove([filePath]);
+    }
+    
+    // Delete file record through documents API
     await API.documents.delete(id);
     
     toast.success('Datei erfolgreich gelöscht');
@@ -101,7 +122,7 @@ export const deleteFile = async (id: string, path: string): Promise<boolean> => 
 export const subscribeToFiles = (contentId: string, callback: (payload: any) => void) => {
   if (import.meta.env.VITE_TEST_MODE === 'true') {
     console.log('File subscription requested for content', contentId);
-    // Im Testmodus: Set up a simple interval to refresh the files
+    // In test mode: Set up a simple interval to refresh the files
     const intervalId = setInterval(async () => {
       try {
         const files = await getContentFiles(contentId);
@@ -120,7 +141,7 @@ export const subscribeToFiles = (contentId: string, callback: (payload: any) => 
       console.log('File subscription ended for content', contentId);
     };
   } else {
-    // Im Produktionsmodus: Echte Supabase Realtime Subscription verwenden
+    // Production mode: Use Supabase Realtime
     const channel = supabase
       .channel(`files-${contentId}`)
       .on('postgres_changes', {
