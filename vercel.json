@@ -1,14 +1,25 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/(.*)", "destination": "http://127.0.0.1:8000/api/$1" }
   ],
   "env": {
     "VITE_SUPABASE_URL": "https://zxhziuydweffrcwhoodd.supabase.co",
     "VITE_SUPABASE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4aHppdXlkd2VmZnJjd2hvb2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0MjMxMzQsImV4cCI6MjA1Njk5OTEzNH0.CaW9Xkq6P2SLP1FrXsOpAoCqmybKchX5P3WzsEpSQ9U",
-    "VITE_API_URL": "http://dein-backend-url-oder-localhost:8000",
+    "VITE_API_URL": "http://127.0.0.1:8000",
     "VITE_TEST_MODE": "false"
   },
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
+      ]
+    }
+  ]
 }
