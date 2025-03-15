@@ -1,63 +1,228 @@
 // src/lib/api-client.ts
-import axios from 'axios';
 import { toast } from 'sonner';
 
-// Create axios instance with baseURL from environment
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  timeout: 30000,
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-  }
-});
+class ApiClient {
+  private baseURL: string;
+  private defaultHeaders: Record<string, string>;
+  private timeoutMs: number;
 
-// Request interceptor for auth token
-apiClient.interceptors.request.use(async (config) => {
-  const token = localStorage.getItem('authToken');
-  
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  constructor() {
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    this.defaultHeaders = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+    this.timeoutMs = 30000;
   }
-  
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
 
-// Response interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Global error handling
-    if (error.response) {
-      // Server returned an error response
-      const status = error.response.status;
-      const message = error.response.data?.message || 'Ein Fehler ist aufgetreten';
+  /**
+   * Make a request with timeout
+   */
+  private async fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal
+      });
+      return response;
+    } finally {
+      clearTimeout(id);
+    }
+  }
+
+  /**
+   * Get the auth token from localStorage
+   */
+  private getAuthToken(): string | null {
+    return localStorage.getItem('authToken');
+  }
+
+  /**
+   * Add auth token to headers if available
+   */
+  private createHeaders(contentType?: string): Record<string, string> {
+    const headers = { ...this.defaultHeaders };
+    
+    // Remove content-type for FormData
+    if (contentType === 'multipart/form-data') {
+      delete headers['Content-Type'];
+    } else if (contentType) {
+      headers['Content-Type'] = contentType;
+    }
+    
+    const token = this.getAuthToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
+  }
+
+  /**
+   * Handle API response
+   */
+  private async handleResponse(response: Response): Promise<any> {
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        const text = await response.text();
+        errorData = { detail: text || response.statusText };
+      }
       
-      if (status === 401) {
-        // Authentication error
+      const errorMessage = errorData.detail || errorData.message || 'Ein Fehler ist aufgetreten';
+      
+      // Handle specific status codes
+      if (response.status === 401) {
         localStorage.removeItem('authToken');
         localStorage.removeItem('isLoggedIn');
         window.location.href = '/';
         toast.error('Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.');
-      } else if (status === 403) {
+      } else if (response.status === 403) {
         toast.error('Sie haben keine Berechtigung für diese Aktion');
-      } else if (status >= 500) {
-        toast.error(`Server-Fehler: ${message}`);
+      } else if (response.status >= 500) {
+        toast.error(`Server-Fehler: ${errorMessage}`);
       } else {
-        toast.error(message);
+        toast.error(errorMessage);
       }
-    } else if (error.request) {
-      // Request made but no response received
-      toast.error('Keine Antwort vom Server. Bitte überprüfen Sie Ihre Internetverbindung.');
-    } else {
-      // Something else happened
-      toast.error(`Fehler: ${error.message}`);
+      
+      throw new Error(errorMessage);
     }
     
-    return Promise.reject(error);
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return response.json();
+    }
+    
+    return response.text();
   }
-);
 
+  /**
+   * GET request
+   */
+  public async get(endpoint: string): Promise<any> {
+    try {
+      const url = `${this.baseURL}${endpoint}`;
+      const response = await this.fetchWithTimeout(url, {
+        method: 'GET',
+        headers: this.createHeaders(),
+      }, this.timeoutMs);
+      
+      return this.handleResponse(response);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        toast.error('Die Anfrage hat zu lange gedauert');
+        throw new Error('Request timeout');
+      }
+      
+      if (!window.navigator.onLine) {
+        toast.error('Keine Internetverbindung');
+        throw new Error('No internet connection');
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * POST request
+   */
+  public async post(endpoint: string, data?: any, isFormData = false): Promise<any> {
+    try {
+      const url = `${this.baseURL}${endpoint}`;
+      const contentType = isFormData ? 'multipart/form-data' : 'application/json';
+      
+      const body = isFormData 
+        ? data // FormData should be sent as is
+        : data ? JSON.stringify(data) : undefined;
+      
+      const response = await this.fetchWithTimeout(url, {
+        method: 'POST',
+        headers: this.createHeaders(contentType),
+        body: body,
+      }, this.timeoutMs);
+      
+      return this.handleResponse(response);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        toast.error('Die Anfrage hat zu lange gedauert');
+        throw new Error('Request timeout');
+      }
+      
+      if (!window.navigator.onLine) {
+        toast.error('Keine Internetverbindung');
+        throw new Error('No internet connection');
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * PUT request
+   */
+  public async put(endpoint: string, data?: any, isFormData = false): Promise<any> {
+    try {
+      const url = `${this.baseURL}${endpoint}`;
+      const contentType = isFormData ? 'multipart/form-data' : 'application/json';
+      
+      const body = isFormData 
+        ? data // FormData should be sent as is
+        : data ? JSON.stringify(data) : undefined;
+      
+      const response = await this.fetchWithTimeout(url, {
+        method: 'PUT',
+        headers: this.createHeaders(contentType),
+        body: body,
+      }, this.timeoutMs);
+      
+      return this.handleResponse(response);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        toast.error('Die Anfrage hat zu lange gedauert');
+        throw new Error('Request timeout');
+      }
+      
+      if (!window.navigator.onLine) {
+        toast.error('Keine Internetverbindung');
+        throw new Error('No internet connection');
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * DELETE request
+   */
+  public async delete(endpoint: string): Promise<any> {
+    try {
+      const url = `${this.baseURL}${endpoint}`;
+      const response = await this.fetchWithTimeout(url, {
+        method: 'DELETE',
+        headers: this.createHeaders(),
+      }, this.timeoutMs);
+      
+      return this.handleResponse(response);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        toast.error('Die Anfrage hat zu lange gedauert');
+        throw new Error('Request timeout');
+      }
+      
+      if (!window.navigator.onLine) {
+        toast.error('Keine Internetverbindung');
+        throw new Error('No internet connection');
+      }
+      
+      throw error;
+    }
+  }
+}
+
+const apiClient = new ApiClient();
 export default apiClient;
