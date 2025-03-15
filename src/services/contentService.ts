@@ -1,3 +1,4 @@
+// src/services/contentService.ts
 import { API } from '@/services/apiService';
 import { toast } from 'sonner';
 
@@ -11,6 +12,7 @@ export interface Content {
   created_at: string;
   updated_at: string;
   user_id: string;
+  current_stage?: string;
 }
 
 export interface ContentCreateInput {
@@ -68,7 +70,8 @@ export const getUserContents = async (): Promise<Content[]> => {
         status: status,
         created_at: workflow.created_at,
         updated_at: workflow.updated_at,
-        user_id: workflow.user_id
+        user_id: workflow.user_id,
+        current_stage: workflow.current_stage
       };
     });
   } catch (error: any) {
@@ -120,7 +123,8 @@ export const getContentById = async (id: string): Promise<Content | null> => {
       status: status,
       created_at: workflow.created_at,
       updated_at: workflow.updated_at,
-      user_id: workflow.user_id
+      user_id: workflow.user_id,
+      current_stage: workflow.current_stage
     };
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Laden des Inhalts');
@@ -146,6 +150,14 @@ export const createContent = async (input: ContentCreateInput): Promise<Content 
     
     const workflow = await API.workflows.create(workflowData);
     
+    // Start first stage (style_analysis) automatically
+    try {
+      await API.workflows.startStage(workflow.id, 'style_analysis');
+    } catch (stageError) {
+      console.error('Error starting initial stage:', stageError);
+      // Continue even if stage start fails
+    }
+    
     toast.success('Inhalt erfolgreich erstellt');
     
     // Format as content
@@ -158,7 +170,8 @@ export const createContent = async (input: ContentCreateInput): Promise<Content 
       status: 'draft',
       created_at: workflow.created_at,
       updated_at: workflow.updated_at,
-      user_id: workflow.user_id
+      user_id: workflow.user_id,
+      current_stage: workflow.current_stage
     };
   } catch (error: any) {
     toast.error(error.message || 'Fehler beim Erstellen des Inhalts');
@@ -184,17 +197,18 @@ export const updateContent = async (id: string, input: ContentUpdateInput): Prom
     
     // Update workflow metadata if needed
     if (input.title || input.description) {
-      const workflowUpdate = {
-        topic: input.title,
-        metadata: {
+      const workflowUpdate: any = {};
+      
+      if (input.title) {
+        workflowUpdate.topic = input.title;
+      }
+      
+      if (input.description) {
+        workflowUpdate.metadata = {
           ...workflow.metadata,
           description: input.description
-        }
-      };
-      
-      // Selective update
-      if (!input.title) delete workflowUpdate.topic;
-      if (!input.description) delete workflowUpdate.metadata.description;
+        };
+      }
       
       // Update workflow
       await API.workflows.update(id, workflowUpdate);
@@ -202,11 +216,7 @@ export const updateContent = async (id: string, input: ContentUpdateInput): Prom
     
     // Update content if provided
     if (input.content) {
-      // Create formData
-      const formData = new FormData();
-      formData.append('article', input.content);
-      
-      // Submit to appropriate agent endpoint based on stage
+      // Determine which agent to use based on current stage
       if (currentStage === 'editing' || currentStage === 'fact_checking') {
         await API.agents.edit(input.content);
       } else if (currentStage === 'seo_optimization') {
@@ -257,4 +267,43 @@ export const deleteContent = async (id: string): Promise<boolean> => {
     console.error('Error deleting content:', error);
     return false;
   }
+};
+
+/**
+ * Get workflow progress percentage based on current stage
+ */
+export const getWorkflowProgress = (currentStage: string | undefined, contentType: 'blog' | 'linkedin'): number => {
+  const blogStages = [
+    'style_analysis',
+    'research',
+    'planning',
+    'writing',
+    'fact_checking',
+    'editing',
+    'seo_optimization',
+    'social_media'
+  ];
+  
+  const linkedinStages = [
+    'style_analysis',
+    'planning',
+    'writing',
+    'editing',
+    'social_media'
+  ];
+  
+  const stages = contentType === 'blog' ? blogStages : linkedinStages;
+  
+  if (!currentStage) {
+    return 0;
+  }
+  
+  const currentIndex = stages.indexOf(currentStage);
+  
+  if (currentIndex === -1) {
+    return 0;
+  }
+  
+  // Calculate progress percentage based on stage index
+  return Math.round(((currentIndex + 1) / stages.length) * 100);
 };
