@@ -26,6 +26,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Create a test user for development mode
+  const createTestUser = () => {
+    const testUser = {
+      id: 'test-user-id',
+      email: 'test@example.com',
+      user_metadata: { name: 'Test User' }
+    };
+    
+    setUser(testUser);
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('user', JSON.stringify(testUser));
+    localStorage.setItem('authToken', 'test-token-for-development');
+    
+    return testUser;
+  };
+
   // Get the JWT token for API requests
   const getToken = async (): Promise<string | null> => {
     // In test mode, return a test token
@@ -56,14 +72,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Test mode: Always provide a test user
       if (import.meta.env.VITE_TEST_MODE === 'true') {
-        const testUser = {
-          id: 'test-user-id',
-          email: 'test@example.com',
-        };
+        // If we're already logged in with test user, keep it
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            // Create a new test user if needed
+            createTestUser();
+          }
+        } else {
+          // Auto-login in test mode for convenience
+          createTestUser();
+        }
         
-        setUser(testUser);
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify(testUser));
         setIsLoading(false);
         return;
       }
@@ -73,6 +95,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Error getting session:', error);
+        // On error in production, clear auth state
+        setUser(null);
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
       } else if (data?.session) {
         // Get the token and save it
         const token = data.session.access_token;
@@ -82,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('user', JSON.stringify(data.session.user));
       } else {
+        // No session found
         setUser(null);
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('user');
@@ -89,6 +117,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Authentication error:', error);
+      // Only clear auth state in production
+      if (import.meta.env.VITE_TEST_MODE !== 'true') {
+        setUser(null);
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -99,14 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Test mode: Sign in directly
       if (import.meta.env.VITE_TEST_MODE === 'true') {
-        const testUser = {
-          id: 'test-user-id',
-          email: email || 'test@example.com',
-        };
-        setUser(testUser);
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify(testUser));
-        localStorage.setItem('authToken', 'test-token-for-development');
+        const testUser = createTestUser();
         toast.success('Erfolgreich angemeldet (Testmodus)');
         return { user: testUser };
       }
@@ -136,15 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Test mode: Sign up directly
       if (import.meta.env.VITE_TEST_MODE === 'true') {
-        const testUser = {
-          id: 'test-user-id',
-          email: email,
-          user_metadata: { name: name || email.split('@')[0] }
-        };
-        setUser(testUser);
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify(testUser));
-        localStorage.setItem('authToken', 'test-token-for-development');
+        const testUser = createTestUser();
         toast.success('Erfolgreich registriert (Testmodus)');
         return { user: testUser };
       }
@@ -185,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       if (import.meta.env.VITE_TEST_MODE === 'true') {
+        // Just clear local storage in test mode, don't redirect
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
@@ -207,7 +228,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize on component mount
   useEffect(() => {
-    initializeAuth();
+    // Only run once
+    const initialized = localStorage.getItem('auth_initialized');
+    if (!initialized) {
+      localStorage.setItem('auth_initialized', 'true');
+      initializeAuth();
+    } else {
+      // If already initialized and in test mode, ensure we have a test user
+      if (import.meta.env.VITE_TEST_MODE === 'true') {
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        const storedUser = localStorage.getItem('user');
+        
+        if (isLoggedIn && storedUser) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          createTestUser();
+        }
+        setIsLoading(false);
+      } else {
+        // For production, still check session
+        initializeAuth();
+      }
+    }
     
     // Auth state subscription only when not in test mode
     if (import.meta.env.VITE_TEST_MODE !== 'true') {
