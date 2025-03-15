@@ -1,5 +1,6 @@
+// src/hooks/use-agent-task.ts
 import { useState, useEffect } from 'react';
-import { API } from '@/services/apiService';
+import { API, AgentTask } from '@/services/apiService';
 
 /**
  * Hook for polling agent task results
